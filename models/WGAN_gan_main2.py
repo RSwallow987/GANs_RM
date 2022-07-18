@@ -1,14 +1,17 @@
-from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3
-from utils import get_noise, data_sampler, save_models
+from vanilla_gam import Generator, Discriminator_z2, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z2
+from utils import get_noise, data_sampler2,  save_models,  getstocks
 
 import torch
+import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import seaborn as sns
-import pandas as pd
+from scipy import stats
+import statsmodels.api as sm
+
 
 # import yfinance as yf
+#
 # alsi=yf.download(
 #     tickers="^J203.JO",
 #     period="1y",
@@ -16,10 +19,11 @@ import pandas as pd
 # )
 # alsi_daily_returns = alsi['Adj Close'].pct_change() + 1
 # log_rets=np.log(alsi_daily_returns)
+# S0=alsi['Adj Close'][0]
 # # mu=alsi_daily_returns.mean()
 # # sigma=alsi_daily_returns.std()
-# mu_log=log_rets.mean()
-# sigma_log=log_rets.std()
+# mu=log_rets.mean()
+# sigma=log_rets.std()
 
 
 #todo wtf is this - export this to a module and update the other code sheet
@@ -96,15 +100,17 @@ def get_crit_loss(crit_fake_pred, crit_real_pred, gp, c_lambda):
     crit_loss = torch.mean(crit_fake_pred)-torch.mean(crit_real_pred)+c_lambda*gp
     return crit_loss
 
+
 # hyper parameters
 num_iteration = 10000
 num_gen = 1
 num_crit = 5
-lr = 1e-2
-batch_size = 128
+lr = 0.0002
+wd=0
+batch_size = (128,20)
 target_dist = "gaussian"
 # target_param = (23., 1.)
-target_param = (0.0002734182238288587, 0.010865570080401907)
+target_param=(0.,0.02)
 display_step=250
 # target_dist = "uniform"
 # target_param = (22, 24)
@@ -117,27 +123,32 @@ noise_param = (0., 1.)
 
 #initialization
 # gen=Generator()
-# crit=Discriminator()
+crit=Discriminator_z2()
+gen=Generator_z2()
 
-gen=Generator2()
-crit=Discriminator2()
+# gen=Generator2()
+# disc=Discriminator2()
 
 # gen=Generator3()
-# crit=Discriminator3()
+# disc=Discriminator3()
 
-gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
-crit_opt = torch.optim.Adam(crit.parameters(), lr=lr)
+
+gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
+crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
 critic_loss = 0
 critic_losses=[]
 generator_loss = 0
 generator_losses=[]
 
+batch_size_target=(128,1)
+
+#training
 for iteration in range(num_iteration):
     for i in range(num_crit):
         crit_opt.zero_grad()
 
-        target = data_sampler(target_dist, target_param, batch_size)
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        target = data_sampler2(target_dist, target_param, batch_size_target)
+        noise = data_sampler2(noise_dist, noise_param, batch_size)
         fakes = gen(noise).detach()
         pred_fake = crit(fakes)
         pred_real = crit(target)
@@ -156,7 +167,7 @@ for iteration in range(num_iteration):
 
     for i in range(num_gen):
         gen_opt.zero_grad()
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        noise = data_sampler2(noise_dist, noise_param, batch_size)
         samples = gen(noise)
         pred = crit(samples)
         gen_loss = get_gen_loss(pred)
@@ -166,24 +177,17 @@ for iteration in range(num_iteration):
         generator_loss += gen_loss.item() / num_gen
         generator_losses.append(generator_loss)
 
+
     if iteration % display_step == 0 and iteration != 0:
-        print('critic_loss {}, generator_loss {}'.format(critic_loss/ (display_step * num_crit),
-                                                                generator_loss / (display_step * num_gen)))
-        # save_models(gen,disc,iteration)
-        # save_network(gen, iteration)
-        # torch.save({
-        #     'epoch': iteration,
-        #     'model_state_dict': gen.state_dict(),
-        #     'optimizer_state_dict': gen_opt.state_dict(),
-        #     'loss': generator_loss
-        # }, PATH_gen)
+        print('critic_loss {}, generator_loss {}'.format(critic_loss / (display_step * num_crit),
+                                                         generator_loss / (display_step * num_gen)))
 
         critic_loss = 0
         generator_loss = 0
 
-        target = data_sampler(target_dist, target_param, batch_size)
+        target = data_sampler2(target_dist, target_param, batch_size_target)
         target = target.data.numpy().reshape(batch_size)
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        noise = data_sampler2(noise_dist, noise_param, batch_size_target)
         transformed_noise = gen.forward(noise)
         transformed_noise = transformed_noise.data.numpy().reshape(batch_size)
 
@@ -210,30 +214,51 @@ plt.plot(critic_losses, label='c_losses')
 plt.legend()
 plt.show()
 
-
 print("Done")
 
-noise = data_sampler(noise_dist, noise_param, 10000)
+
+#Testing
+noise = data_sampler2(noise_dist, noise_param, (100000,20))
 transformed_noise = gen.forward(noise)
-transformed_noise = transformed_noise.data.numpy()
-transformed_q=np.exp(np.quantile(transformed_noise,q=0.05))
+transformed_noise = transformed_noise.data.numpy().reshape(100000)
+rets=np.exp(transformed_noise)
+np.quantile(rets,0.05)
 
-target = data_sampler(target_dist, target_param, 10000)
-target=target.data.numpy()
-target_q=np.exp(np.quantile(target,q=0.05))
+sns.kdeplot(transformed_noise,fill=True)
+plt.show()
 
-df=pd.DataFrame()
-df['Actual']=pd.Series(target.flatten())
-df['Generated']=pd.Series(transformed_noise.flatten())
+kde = sm.nonparametric.KDEUnivariate(transformed_noise)
+kde.fit()  # Estimate the densities
 
-fig=sns.kdeplot(df['Actual'], shade=True, color='r')
-fig=sns.kdeplot(df['Generated'], shade=True, color='b')
+fig = plt.figure(figsize=(12, 5))
+ax = fig.add_subplot(111)
+
+# Plot the histogram
+ax.hist(
+    transformed_noise,
+    bins=20,
+    density=True,
+    label="Histogram from samples",
+    zorder=5,
+    edgecolor="k",
+    alpha=0.5,
+)
+
+# Plot the KDE as fitted using the default arguments
+ax.plot(kde.support, kde.density, lw=3, label="KDE from samples", zorder=10)
+
+# Plot the samples
+ax.scatter(
+    transformed_noise,
+    np.abs(np.random.randn(transformed_noise.size)) / 40,
+    marker="x",
+    color="red",
+    zorder=20,
+    label="Samples",
+    alpha=0.5,
+)
+
+ax.legend(loc="best")
+ax.grid(True, zorder=-5)
 
 plt.show()
-#todo work on interpreting loss graphs
-#todo increase latent dimentions
-#todo 2,3,4 hidden layers and 64,128 and 256 neurons
-#todo leaky relu with alpha 0.2
-#todo Adam 0.0002 and 0.5 decay B1
-#todo normalize data to zero mean and unit variance before training, inverse scaling when sampling from generator.
-#todo set fixed mu and std from epirical returns

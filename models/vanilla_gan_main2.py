@@ -25,10 +25,6 @@ import statsmodels.api as sm
 # mu=log_rets.mean()
 # sigma=log_rets.std()
 
-# PATH_disc = '../checkpoints/Critic.pt'
-# PATH_gen = '../checkpoints/Generator.pt'
-
-
 # hyper parameters
 num_iteration = 10000
 num_gen = 1
@@ -150,7 +146,7 @@ transformed_noise = transformed_noise.data.numpy().reshape(100000)
 rets=np.exp(transformed_noise)
 np.quantile(rets,0.05)
 
-sns.kdeplot(transformed_noise,shaded=True)
+sns.kdeplot(transformed_noise,fill=True)
 plt.show()
 
 kde = sm.nonparametric.KDEUnivariate(transformed_noise)
