@@ -21,10 +21,6 @@ S0=alsi['Adj Close'][0]
 mu=log_rets.mean()
 sigma=log_rets.std()
 
-# PATH_disc = '../checkpoints/Critic.pt'
-# PATH_gen = '../checkpoints/Generator.pt'
-
-
 # hyper parameters
 num_iteration = 10000
 num_gen = 1
@@ -45,6 +41,10 @@ noise_param = (0., 1.)
 # noise_param = (-1, 1)
 
 #initialization
+#_______________________________CHANGE____________________________#
+gan_type="vanilla"
+
+
 # gen=Generator()
 disc=Discriminator()
 gen=Generator_z()
@@ -102,7 +102,7 @@ for iteration in range(num_iteration):
 
     if iteration % display_step == 0 and iteration != 0:
         print('discriminator_loss {}, generator_loss {}'.format(discriminator_loss/(display_step*num_disc), generator_loss/(display_step*num_gen)))
-        save_models(gen,disc,iteration)
+        save_models(gen,disc,iteration,gan_type)
         discriminator_loss = 0
         generator_loss = 0
 
@@ -135,10 +135,6 @@ plt.plot(discriminator_losses, label='d_losses')
 plt.legend()
 plt.show()
 
-#todo backtesting details
-#todo save images
-
-
 #Testing
 noise = data_sampler(noise_dist, noise_param, 100000)
 transformed_noise = gen.forward(noise)
@@ -148,6 +144,5 @@ np.quantile(rets,0.05)
 
 x1,x2=gen_kde(transformed_noise)
 plt.show()
-
 
 print("Done")

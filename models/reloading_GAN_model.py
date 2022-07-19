@@ -20,3 +20,5 @@ np.quantile(rets,0.05)
 x1,x2=gen_kde(transformed_noise)
 
 plt.show()
+
+plt.savefig()

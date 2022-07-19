@@ -36,16 +36,15 @@ def data_sampler2(dist_type, dist_param, batch_size):
     elif dist_type=="cauchy":
         return dist_param[1] * Tensor(np.random.standard_cauchy(((batch_size[0], batch_size[1])))) + 23.
 
-def save_models(generator, discriminator, epoch):
+def save_models(generator, discriminator, epoch, gan_type):
   """ Save models at specific point in time. """
   # at specified directory
   # get current date and time
   x = datetime.datetime.now()
-  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\checkpoints\\" + x.strftime('%d-%m-%Y-%H-%M-%S.pt')
+  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\checkpoints\\" + gan_type + epoch+ x.strftime('%d-%m-%Y-%H-%M-%S.pt')
   with open(file_name, 'w') as fp:
       print('created', file_name)
   torch.save(generator.state_dict(),file_name)
-  # torch.save(discriminator.state_dict(), f'./checkpoints/discriminator_{epoch}.pt')
 
 # Import data - only for multiple stocks
 def getstocks(stocks, start, end):
@@ -70,10 +69,6 @@ def rolling_stats(returns, window):
     sigma=returns.rolling(window=window, center=False, min_periods=window).std()
     cov=returns.rolling(window=window, center=False, min_periods=window, method='table').cov()
     return mu, sigma, cov
-
-#todo ewma
-#todo log returns ?
-
 
 def get_gradient(crit, real, fake, epsilon):
     '''
@@ -187,3 +182,12 @@ def gen_kde(transformed_noise):
     ax.grid(True, zorder=-5)
 
     return fig1, ax
+
+def image_name(gan_type):
+  """ Save models at specific point in time. """
+  # at specified directory
+  # get current date and time
+  x = datetime.datetime.now()
+  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\images\\" +gan_type+ x.strftime('%d-%m-%Y-%H-%M-%S.pt')
+  with open(file_name, 'w') as fp:
+      print('created', file_name)

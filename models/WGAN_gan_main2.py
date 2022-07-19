@@ -5,8 +5,6 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-
 # hyper parameters
 num_iteration = 10000
 num_gen = 1
@@ -91,7 +89,7 @@ for iteration in range(num_iteration):
         critic_loss = 0
         generator_loss = 0
 
-        save_models(gen, crit, iteration)
+        save_models(gen, crit, iteration, gan_type="WGAN_ex")
 
         target = data_sampler2(target_dist, target_param, batch_size_target)
         target = target.data.numpy().reshape(batch_size_target)
