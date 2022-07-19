@@ -1,5 +1,5 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z
-from utils import get_noise, data_sampler, save_models,  getstocks
+from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde
 
 import torch
 import torch.nn as nn
@@ -102,7 +102,7 @@ for iteration in range(num_iteration):
 
     if iteration % display_step == 0 and iteration != 0:
         print('discriminator_loss {}, generator_loss {}'.format(discriminator_loss/(display_step*num_disc), generator_loss/(display_step*num_gen)))
-        # save_models(gen,disc,iteration)
+        save_models(gen,disc,iteration)
         discriminator_loss = 0
         generator_loss = 0
 
@@ -137,7 +137,6 @@ plt.show()
 
 #todo backtesting details
 #todo save images
-#todo properly save checkpoints
 
 
 #Testing
@@ -146,3 +145,9 @@ transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
 rets=np.exp(transformed_noise)
 np.quantile(rets,0.05)
+
+x1,x2=gen_kde(transformed_noise)
+plt.show()
+
+
+print("Done")

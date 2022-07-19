@@ -1,10 +1,10 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3
 from utils import get_noise, data_sampler, save_models
+from utils import getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss
 
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import seaborn as sns
 import pandas as pd
 
@@ -20,81 +20,6 @@ import pandas as pd
 # # sigma=alsi_daily_returns.std()
 # mu_log=log_rets.mean()
 # sigma_log=log_rets.std()
-
-
-#todo wtf is this - export this to a module and update the other code sheet
-def get_gradient(crit, real, fake, epsilon):
-    '''
-    Return the gradient of the critic's scores with respect to mixes of real and fake samples.
-    Parameters:
-        crit: the critic model
-        real: a batch of real samples
-        fake: a batch of fake samples
-        epsilon: a vector of the uniformly random proportions of real/fake per mixed sample
-    Returns:
-        gradient: the gradient of the critic's scores, with respect to the mixed sample
-    '''
-    # Mix the samples together
-    mixed_sample = real * epsilon + fake * (1 - epsilon)
-    # Calculate the critic's scores on the mixed sample
-    mixed_scores = crit(mixed_sample)
-    # Take the gradient of the scores with respect to the sample
-    gradient = torch.autograd.grad(
-        inputs=mixed_sample,
-        outputs=mixed_scores,
-        # These other parameters have to do with the pytorch autograd engine works
-        grad_outputs=torch.ones_like(mixed_scores),
-        create_graph=True,
-        retain_graph=True,
-    )[0]
-    return gradient
-
-
-def gradient_penalty(gradient):
-    '''
-    Return the gradient penalty, given a gradient.
-    Given a batch of sample gradients, you calculate the magnitude of each sample's gradient
-    and penalize the mean quadratic distance of each magnitude to 1.
-    Parameters:
-        gradient: the gradient of the critic's scores, with respect to the mixed sample
-    Returns:
-        penalty: the gradient penalty
-    '''
-    # Flatten the gradients so that each row captures one sample
-    gradient = gradient.view(len(gradient), -1)
-
-    # Calculate the magnitude of every row
-    gradient_norm = gradient.norm(2, dim=1)
-
-    # Penalize the mean squared distance of the gradient norms from 1
-    penalty = torch.mean(pow(gradient_norm - torch.ones_like(gradient_norm), 2))
-    return penalty
-
-def get_gen_loss(crit_fake_pred):
-    '''
-    Return the loss of a generator given the critic's scores of the generator's fake samples.
-    Parameters:
-        crit_fake_pred: the critic's scores of the fake samples
-    Returns:
-        gen_loss: a scalar loss value for the current batch of the generator
-    '''
-    gen_loss = -torch.mean(crit_fake_pred)
-    return gen_loss
-
-def get_crit_loss(crit_fake_pred, crit_real_pred, gp, c_lambda):
-    '''
-    Return the loss of a critic given the critic's scores for fake and real samples,
-    the gradient penalty, and gradient penalty weight.
-    Parameters:
-        crit_fake_pred: the critic's scores of the fake samples
-        crit_real_pred: the critic's scores of the real samples
-        gp: the unweighted gradient penalty
-        c_lambda: the current weight of the gradient penalty
-    Returns:
-        crit_loss: a scalar for the critic's loss, accounting for the relevant factors
-    '''
-    crit_loss = torch.mean(crit_fake_pred)-torch.mean(crit_real_pred)+c_lambda*gp
-    return crit_loss
 
 # hyper parameters
 num_iteration = 10000
@@ -169,17 +94,10 @@ for iteration in range(num_iteration):
     if iteration % display_step == 0 and iteration != 0:
         print('critic_loss {}, generator_loss {}'.format(critic_loss/ (display_step * num_crit),
                                                                 generator_loss / (display_step * num_gen)))
-        # save_models(gen,disc,iteration)
-        # save_network(gen, iteration)
-        # torch.save({
-        #     'epoch': iteration,
-        #     'model_state_dict': gen.state_dict(),
-        #     'optimizer_state_dict': gen_opt.state_dict(),
-        #     'loss': generator_loss
-        # }, PATH_gen)
-
         critic_loss = 0
         generator_loss = 0
+
+        save_models(gen, crit, iteration)
 
         target = data_sampler(target_dist, target_param, batch_size)
         target = target.data.numpy().reshape(batch_size)
@@ -231,9 +149,4 @@ fig=sns.kdeplot(df['Generated'], shade=True, color='b')
 
 plt.show()
 #todo work on interpreting loss graphs
-#todo increase latent dimentions
-#todo 2,3,4 hidden layers and 64,128 and 256 neurons
-#todo leaky relu with alpha 0.2
-#todo Adam 0.0002 and 0.5 decay B1
 #todo normalize data to zero mean and unit variance before training, inverse scaling when sampling from generator.
-#todo set fixed mu and std from epirical returns
