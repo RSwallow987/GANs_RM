@@ -102,7 +102,7 @@ for iteration in range(num_iteration):
 
     if iteration % display_step == 0 and iteration != 0:
         print('discriminator_loss {}, generator_loss {}'.format(discriminator_loss/(display_step*num_disc), generator_loss/(display_step*num_gen)))
-        save_models(gen,disc,iteration,gan_type)
+        save_models(gen,disc,str(iteration),gan_type)
         discriminator_loss = 0
         generator_loss = 0
 

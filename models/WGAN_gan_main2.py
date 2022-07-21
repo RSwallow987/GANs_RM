@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # hyper parameters
-num_iteration = 10000
+num_iteration = 5000
 num_gen = 1
 num_crit = 5
 lr = 0.002
@@ -89,10 +89,10 @@ for iteration in range(num_iteration):
         critic_loss = 0
         generator_loss = 0
 
-        save_models(gen, crit, iteration, gan_type="WGAN_ex")
+        save_models(gen, crit, str(iteration), gan_type="WGAN_ex")
 
-        target = data_sampler2(target_dist, target_param, batch_size_target)
-        target = target.data.numpy().reshape(batch_size_target)
+        # target = data_sampler2(target_dist, target_param, batch_size_target)
+        # target = target.data.numpy().reshape(batch_size_target)
         noise = data_sampler2(noise_dist, noise_param, batch_size)
         transformed_noise = gen.forward(noise)
         transformed_noise = transformed_noise.data.numpy().reshape(batch_size_target)

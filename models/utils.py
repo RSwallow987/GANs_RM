@@ -149,6 +149,8 @@ def gen_kde(transformed_noise):
 
     kde = sm.nonparametric.KDEUnivariate(transformed_noise)
     kde.fit()  # Estimate the densities
+    q=kde.icdf[:]
+    d=kde.cdf[:]
 
     fig = plt.figure(figsize=(12, 5))
     ax = fig.add_subplot(111)
@@ -181,13 +183,14 @@ def gen_kde(transformed_noise):
     ax.legend(loc="best")
     ax.grid(True, zorder=-5)
 
-    return fig1, ax
+    return fig1, ax, q
 
 def image_name(gan_type):
   """ Save models at specific point in time. """
   # at specified directory
   # get current date and time
   x = datetime.datetime.now()
-  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\images\\" +gan_type+ x.strftime('%d-%m-%Y-%H-%M-%S.pt')
-  with open(file_name, 'w') as fp:
-      print('created', file_name)
+  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\images\\" +gan_type+ x.strftime('%d-%m-%Y-%H-%M-%S.png')
+  # with open(file_name, 'w') as fp:
+  #     print('created', file_name)
+  return file_name

@@ -97,7 +97,7 @@ for iteration in range(num_iteration):
         critic_loss = 0
         generator_loss = 0
 
-        save_models(gen, crit, iteration, gan_type="WGAN")
+        save_models(gen, crit,str(iteration), gan_type="WGAN")
 
         target = data_sampler(target_dist, target_param, batch_size)
         target = target.data.numpy().reshape(batch_size)
