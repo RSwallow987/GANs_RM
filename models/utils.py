@@ -149,8 +149,8 @@ def gen_kde(transformed_noise):
 
     kde = sm.nonparametric.KDEUnivariate(transformed_noise)
     kde.fit()  # Estimate the densities
-    q=kde.icdf[:]
-    d=kde.cdf[:]
+    # q=kde.icdf[:]
+    # d=kde.cdf[:]
 
     fig = plt.figure(figsize=(12, 5))
     ax = fig.add_subplot(111)
@@ -183,7 +183,7 @@ def gen_kde(transformed_noise):
     ax.legend(loc="best")
     ax.grid(True, zorder=-5)
 
-    return fig1, ax, q
+    return fig1, ax
 
 def image_name(gan_type):
   """ Save models at specific point in time. """

@@ -10,11 +10,11 @@ import seaborn as sns
 import pandas as pd
 
 from vanilla_gam import GNet, Encoder, Decoder
-from utils import data_sampler
+from utils import data_sampler2, data_sampler, save_models
 
 
 # hyper parameters
-num_iteration = 10000
+num_epochs = 10000
 num_gen = 1
 num_enc_dec = 5
 lr = 1e-3
@@ -47,13 +47,18 @@ enc_optimizer = optim.Adam(enc.parameters(), lr=lr)
 dec_optimizer = optim.Adam(dec.parameters(), lr=lr)
 
 
+b = (num_enc_dec,batch_size)
+data_set= data_sampler2(target_dist, target_param, b)
+
 cum_dis_loss = 0
 cum_gen_loss = 0
-for iteration in range(num_iteration):
+for iteration in range(num_epochs):
     for i in range(num_enc_dec):
         enc.zero_grad()
         dec.zero_grad()
-        target = data_sampler(target_dist, target_param, batch_size)
+        # target = data_sampler(target_dist, target_param, batch_size)
+        target = data_set[i, :]
+        target = torch.reshape(target, (batch_size, 1))
         noise = data_sampler(noise_dist, noise_param, batch_size)
         encoded_target = enc.forward(target)
         decoded_target = dec.forward(encoded_target)
@@ -71,7 +76,8 @@ for iteration in range(num_iteration):
         cum_dis_loss = cum_dis_loss - L_MMD_AE.item()
     for i in range(num_gen):
         gen.zero_grad()
-        target = data_sampler(target_dist, target_param, batch_size)
+        target = data_set[i, :]
+        target = torch.reshape(target, (batch_size, 1))
         noise = data_sampler(noise_dist, noise_param, batch_size)
         encoded_target = enc.forward(target)
         encoded_noise = enc.forward(gen.forward(noise))
@@ -81,19 +87,30 @@ for iteration in range(num_iteration):
         cum_gen_loss = cum_gen_loss + MMD.item()
     if iteration % print_int == 0 and iteration != 0:
         print('cum_dis_loss {}, cum_gen_loss {}'.format(cum_dis_loss/(print_int*num_enc_dec), cum_gen_loss/(print_int*num_gen)))
+        save_models(gen, enc, str(iteration), "MMD")
         cum_dis_loss = 0
         cum_gen_loss = 0
-        target = data_sampler(target_dist, target_param, batch_size)
-        target = target.data.numpy().reshape(batch_size)
         noise = data_sampler(noise_dist, noise_param, batch_size)
         transformed_noise = gen.forward(noise)
-        transformed_noise = transformed_noise.data.numpy().reshape(batch_size)
+        transformed_noise = transformed_noise.data.numpy().reshape((batch_size, 1))
 
-        # plt.hist(target, 20)
-        plt.hist(transformed_noise, 20)
+        # Visualization
+        mu = transformed_noise.mean()
+        sigma = transformed_noise.std()  # standard deviation of distribution
+        x = transformed_noise
+        num_bins = 50
+
+        fig, ax = plt.subplots()
+        n, bins, patches = ax.hist(x, num_bins, density=True)
+        # add a 'best fit' line
+        y = ((1 / (np.sqrt(2 * np.pi) * sigma)) *
+             np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2))  # Assuming normal distribution
+        ax.plot(bins, y, '--')
+        ax.set_xlabel('')
+        ax.set_ylabel('Probability density')
+        ax.set_title(r'Histogram of Generated Data')
+        fig.tight_layout()
         plt.show()
-
-#todo implement own MMD GAN
 print("done")
 
 noise = data_sampler(noise_dist, noise_param, 10000)

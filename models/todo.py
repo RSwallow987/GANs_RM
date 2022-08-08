@@ -1,6 +1,6 @@
 #todo test other distributions
 #todo backtesting
-#todo MMD GAN
 #todo check all figures are saved
-#todo VAR breaches
+#todo VAR breaches for other gans
 #todo function descriptions
+#todo normalize input

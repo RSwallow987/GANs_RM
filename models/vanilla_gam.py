@@ -261,3 +261,46 @@ class Discriminator_z2(nn.Module):
         returns a 1-dimension tensor representing fake/real.
         '''
         return self.disc(sample)
+
+# MMD GAN
+class GNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        model = nn.Sequential(
+            nn.Linear(1, 7),
+            nn.ELU(),
+            nn.Linear(7, 13),
+            nn.ELU(),
+            nn.Linear(13, 7),
+            nn.ELU(),
+            nn.Linear(7, 1)
+        )
+        self.model = model
+    def forward(self, input):
+        return self.model(input)
+
+class Encoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        model = nn.Sequential(
+            nn.Linear(1, 11),
+            nn.ELU(),
+            nn.Linear(11, 29),
+            nn.ELU()
+        )
+        self.model = model
+    def forward(self, input):
+        return self.model(input)
+
+class Decoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        model = nn.Sequential(
+            nn.Linear(29, 11),
+            nn.ELU(),
+            nn.Linear(11, 1),
+        )
+        self.model = model
+    def forward(self, input):
+        return self.model(input)
+
