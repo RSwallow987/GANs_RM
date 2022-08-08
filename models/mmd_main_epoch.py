@@ -10,7 +10,7 @@ import seaborn as sns
 import pandas as pd
 
 from vanilla_gam import GNet, Encoder, Decoder
-from utils import data_sampler2, data_sampler, save_models
+from utils import data_sampler2, data_sampler, save_models, gen_kde
 
 
 # hyper parameters
@@ -116,11 +116,9 @@ print("done")
 noise = data_sampler(noise_dist, noise_param, 10000)
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
-transformed_q=np.exp(np.quantile(transformed_noise,q=0.05))
 
 target = data_sampler(target_dist, target_param, 10000)
 target=target.data.numpy()
-target_q=np.exp(np.quantile(target,q=0.05))
 
 df=pd.DataFrame()
 
@@ -133,3 +131,18 @@ fig=sns.kdeplot(df['Generated'], shade=True, color='b')
 
 plt.show()
 
+#Backtest
+var95=np.quantile(transformed_noise,0.05)
+x1,x2=gen_kde(transformed_noise)
+plt.show()
+
+print("Done")
+
+k=data_set.reshape(-1).detach().numpy()
+breeches=np.where(k<var95)
+num_breeches=len(breeches[0])
+
+if num_breeches>10000*0.05:
+    print("Breached:",num_breeches/10000)
+else:
+    print("Adequate Model:",num_breeches/10000 )

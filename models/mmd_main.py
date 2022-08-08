@@ -93,7 +93,6 @@ for iteration in range(num_iteration):
         plt.hist(transformed_noise, 20)
         plt.show()
 
-#todo implement own MMD GAN
 print("done")
 
 noise = data_sampler(noise_dist, noise_param, 10000)
