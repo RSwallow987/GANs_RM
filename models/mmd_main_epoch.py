@@ -2,22 +2,22 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-from torch import Tensor
 from mmd import mix_rbf_mmd2
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from vanilla_gam import GNet, Encoder, Decoder
-from utils import data_sampler2, data_sampler, save_models, gen_kde
+from vanilla_gam import GNet, Encoder, Decoder,Generator2
+
+from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist
 
 
 # hyper parameters
 num_epochs = 10000
 num_gen = 1
 num_enc_dec = 5
-lr = 1e-3
+lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
 batch_size = 128
 target_dist = "gaussian"
 target_param = (0, 0.02)
@@ -30,17 +30,19 @@ noise_param = (0., 1.)
 # noise_dist = "uniform"
 # noise_param = (-1, 1)
 
-lambda_AE = 5. #as in paper
+lambda_AE = 8. #as in paper
+
 # sigma for MMD
 base = 1.0
 sigma_list = [1, 2, 4, 8, 16]
 sigma_list = [sigma / base for sigma in sigma_list]
 print_int = 100
 
-gen = GNet()
+# gen = GNet()
+gen=Generator2()
 enc = Encoder()
 dec = Decoder()
-# lr = (1e-2, 1e-3, 1e-4)
+
 criterion = nn.MSELoss()
 gen_optimizer = optim.Adam(gen.parameters(), lr=lr)
 enc_optimizer = optim.Adam(enc.parameters(), lr=lr)
@@ -56,7 +58,6 @@ for iteration in range(num_epochs):
     for i in range(num_enc_dec):
         enc.zero_grad()
         dec.zero_grad()
-        # target = data_sampler(target_dist, target_param, batch_size)
         target = data_set[i, :]
         target = torch.reshape(target, (batch_size, 1))
         noise = data_sampler(noise_dist, noise_param, batch_size)
@@ -133,7 +134,7 @@ plt.show()
 
 #Backtest
 var95=np.quantile(transformed_noise,0.05)
-x1,x2=gen_kde(transformed_noise)
+x1,x2=gen_kde(transformed_noise.reshape(-1))
 plt.show()
 
 print("Done")
@@ -142,7 +143,10 @@ k=data_set.reshape(-1).detach().numpy()
 breeches=np.where(k<var95)
 num_breeches=len(breeches[0])
 
-if num_breeches>10000*0.05:
-    print("Breached:",num_breeches/10000)
+if num_breeches>len(k)*0.05:
+    print("Breached %:",num_breeches*100/len(k))
 else:
-    print("Adequate Model:",num_breeches/10000 )
+    print("Adequate Model %:",num_breeches*100/len(k))
+
+#Hist VaR
+save_hist(data_set, "MMD") #Save data set for hist VaR Model.

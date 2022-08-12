@@ -41,10 +41,21 @@ def save_models(generator, discriminator, epoch, gan_type):
   # at specified directory
   # get current date and time
   x = datetime.datetime.now()
-  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\checkpoints\\" + gan_type + epoch+ x.strftime('%d-%m-%Y-%H-%M-%S.pt')
+  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\checkpoints\\" + gan_type + "_" + epoch+ "_" + x.strftime('%d-%m-%Y-%H-%M-%S.pt')
   with open(file_name, 'w') as fp:
       print('created', file_name)
   torch.save(generator.state_dict(),file_name)
+
+def save_hist(tensor,gan_type):
+  """ Save models at specific point in time. """
+  # at specified directory
+  # get current date and time
+  x = datetime.datetime.now()
+  file_name = r"C:\Users\rswal\PycharmProjects\Thesis\data quantiles\\" + gan_type + "_" + x.strftime('%d-%m-%Y-%H-%M-%S.pt')
+  with open(file_name, 'w') as fp:
+      print('created', file_name)
+  torch.save(tensor,file_name)
+
 
 # Import data - only for multiple stocks
 def getstocks(stocks, start, end):

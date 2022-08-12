@@ -128,17 +128,15 @@ plt.plot(critic_losses, label='c_losses')
 plt.legend()
 plt.show()
 
-
 print("Done")
 
+#Testing
 noise = data_sampler(noise_dist, noise_param, 10000)
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
-transformed_q=np.exp(np.quantile(transformed_noise,q=0.05))
 
 target = data_sampler(target_dist, target_param, 10000)
 target=target.data.numpy()
-target_q=np.exp(np.quantile(target,q=0.05))
 
 df=pd.DataFrame()
 df['Actual']=pd.Series(target.flatten())
@@ -146,7 +144,5 @@ df['Generated']=pd.Series(transformed_noise.flatten())
 
 fig=sns.kdeplot(df['Actual'], shade=True, color='r')
 fig=sns.kdeplot(df['Generated'], shade=True, color='b')
-
 plt.show()
-#todo work on interpreting loss graphs
-#todo normalize data to zero mean and unit variance before training, inverse scaling when sampling from generator.
+
