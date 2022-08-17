@@ -1,5 +1,5 @@
-from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z, Generator_z2,Discriminator_z2
-from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2
+from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z, Generator_z2,Discriminator_z2, GNet, Encoder, Generator_Lz2
+from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist
 
 import torch
 import torch.nn as nn
@@ -8,12 +8,13 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=200
+samps=128
 num_gen = 1
 num_disc = 5
-lr = 2e-3
+lr = 1e-3
+z=20
 batch_size = (num_disc,samps)
-noise_size=(samps,20)
+noise_size=(samps,z)
 target_dist = "gaussian"
 # target_param = (23., 1.)
 target_param=(0.0,0.02)
@@ -29,18 +30,10 @@ noise_param = (0., 1.)
 
 #initialization
 #_______________________________CHANGE____________________________#
-gan_type="vanilla"
+gan_type="NS"
 
-
-# gen=Generator()
 disc=Discriminator_z2()
-gen=Generator_z2()
-
-# gen=Generator2()
-# disc=Discriminator2()
-
-# gen=Generator3()
-# disc=Discriminator3()
+gen=Generator_Lz2()
 
 criterion=nn.BCEWithLogitsLoss()
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
@@ -53,6 +46,7 @@ generator_losses=[]
 
 #training
 data_set= data_sampler2(target_dist, target_param, batch_size)
+save_hist(data_set, "NS")
 
 for iteration in range(num_epochs):
     for i in range(num_disc):
@@ -94,21 +88,16 @@ for iteration in range(num_epochs):
         save_models(gen,disc,str(iteration),gan_type)
         discriminator_loss = 0
         generator_loss = 0
-        # target = data_sampler(target_dist, target_param, batch_size)
-        # target = target.data.numpy().reshape(batch_size)
         noise = data_sampler2(noise_dist, noise_param, noise_size)
         transformed_noise = gen.forward(noise)
         transformed_noise = transformed_noise.data.numpy().reshape((samps,1))
-
         #Visualization
         mu = transformed_noise.mean()
         sigma = transformed_noise.std()  # standard deviation of distribution
         x = transformed_noise
         num_bins=50
-
         fig, ax = plt.subplots()
         n, bins, patches = ax.hist(x, num_bins, density=True)
-        # add a 'best fit' line
         y = ((1 / (np.sqrt(2 * np.pi) * sigma)) *
              np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2)) #Assuming normal distribution
         ax.plot(bins, y, '--')
@@ -122,12 +111,12 @@ plt.plot(generator_losses, label='g_losses')
 plt.plot(discriminator_losses, label='d_losses')
 plt.legend()
 plt.show()
+print("Done")
 
 #Testing
-noise = data_sampler2(noise_dist, noise_param, (100000,20))
+noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
-# rets=np.exp(transformed_noise)
 var95=np.quantile(transformed_noise,0.05)
 
 x1,x2=gen_kde(transformed_noise)
@@ -138,3 +127,10 @@ print("Done")
 k=data_set.reshape(-1).detach().numpy()
 breeches=np.where(k<var95)
 num_breeches=len(breeches[0])
+
+if num_breeches>len(k)*0.05:
+    print("Breached %:",num_breeches*100/len(k))
+else:
+    print("Adequate Model %:",num_breeches*100/len(k))
+
+save_models(gen,disc,"final",gan_type)

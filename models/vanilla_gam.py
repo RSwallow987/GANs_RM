@@ -1,5 +1,7 @@
 from torch import nn
 
+#todo change file name for ease of use
+
 class Generator(nn.Module):
     '''
     Generator Class
@@ -224,6 +226,36 @@ class Generator_z2(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(128, 128),
             nn.ReLU(inplace=True),
+            nn.Linear(128, 1)
+        )
+    def forward(self, noise):
+        '''
+        Function for completing a forward pass of the generator: Given a noise tensor,
+        returns generated samples from the learnt distribution.
+        Parameters:
+            noise: a noise tensor with dimensions (n_samples, z_dim)
+        '''
+        return self.gen(noise)
+
+class Generator_Lz2(nn.Module):
+    '''
+    Generator Class
+    Values:
+        z_dim: the dimension of the noise vector, a scalar
+        sample_dim: the dimension of the samples, fitted for the dataset used, a scalar.
+        hidden_dim: the inner dimension, a scalar
+    '''
+
+    def __init__(self, z_dim=20, sample_dim=1, hidden_dim=128):
+        super(Generator_Lz2, self).__init__()
+        # Build the neural network: 3 layers, 1 output layer
+        self.gen = nn.Sequential(
+            nn.Linear(z_dim, 128),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(128, 128),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(128, 128),
+            nn.LeakyReLU(inplace=True),
             nn.Linear(128, 1)
         )
     def forward(self, noise):

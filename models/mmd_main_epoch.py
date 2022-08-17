@@ -112,7 +112,7 @@ for iteration in range(num_epochs):
         ax.set_title(r'Histogram of Generated Data')
         fig.tight_layout()
         plt.show()
-print("done")
+print("Done")
 
 noise = data_sampler(noise_dist, noise_param, 10000)
 transformed_noise = gen.forward(noise)
@@ -150,3 +150,4 @@ else:
 
 #Hist VaR
 save_hist(data_set, "MMD") #Save data set for hist VaR Model.
+save_models(gen,enc,"final","MMD")
