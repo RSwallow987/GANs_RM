@@ -87,3 +87,7 @@ if ks_test.pvalue <0.05:
     print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
 else:
     print("Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
+
+print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
+print("Real Data: ",stats.describe(x))
+print("Generated Data: ", stats.describe(transformed_noise))
