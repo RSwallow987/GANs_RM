@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from scipy import stats
 
 data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 
@@ -81,3 +82,9 @@ plt.legend(labels=["Actual","Generated"])
 plt.xlabel("")
 plt.show()
 
+#Stats Testing
+ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
+if ks_test.pvalue <0.05:
+    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
+else:
+    print("Null Hypothesis accepted: From same distribution. P-value: ", ks_test.pvalue)
