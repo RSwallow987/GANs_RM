@@ -1,19 +1,21 @@
-from vanilla_gam import Discriminator_z2, Generator_z2
-from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde
+from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2
+from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist
 
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 # hyper parameters
-num_epochs = 5000
-samps=200
+num_epochs = 10000
+samps=128
 num_gen = 1
 num_crit = 5
-lr = 0.0001
+lr = 0.001
 wd=0
+z=20
 batch_size = (num_crit,samps)
-noise_size=(samps,20)
+noise_size=(samps,z)
 target_dist = "gaussian"
 # target_param = (23., 1.)
 target_param=(0.,0.02)
@@ -28,16 +30,8 @@ noise_param = (0., 1.)
 # noise_param = (-1, 1)
 
 #initialization
-# gen=Generator()
 crit=Discriminator_z2()
-gen=Generator_z2()
-
-# gen=Generator2()
-# disc=Discriminator2()
-
-# gen=Generator3()
-# disc=Discriminator3()
-
+gen=Generator_Lz2()
 
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
 crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
@@ -47,6 +41,7 @@ generator_loss = 0
 generator_losses=[]
 
 data_set= data_sampler2(target_dist, target_param, batch_size)
+save_hist(data_set, "WGAN")
 
 #training
 for iteration in range(num_epochs):
@@ -121,20 +116,25 @@ plt.plot(generator_losses, label='g_losses')
 plt.plot(critic_losses, label='c_losses')
 plt.legend()
 plt.show()
-
-
+print("Done")
 
 #Testing
-noise = data_sampler2(noise_dist, noise_param, (100000,20))
+noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
 var95=np.quantile(transformed_noise,0.05)
 
-x1,x2=gen_kde(transformed_noise)
+#Backtest
+x1,x2=gen_kde(transformed_noise.reshape(-1))
 plt.show()
-
-print("Done")
 
 k=data_set.reshape(-1).detach().numpy()
 breeches=np.where(k<var95)
 num_breeches=len(breeches[0])
+
+if num_breeches>len(k)*0.05:
+    print("Breached %:",num_breeches*100/len(k))
+else:
+    print("Adequate Model %:",num_breeches*100/len(k))
+
+save_models(gen,crit,"final","WGAN")
