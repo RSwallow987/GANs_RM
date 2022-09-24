@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from vanilla_gam import GNet, Encoder, Decoder,Generator2
+from vanilla_gam import GNet, Encoder, Decoder,Generator2, Generator_z2
 
 from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist
 
@@ -18,7 +18,9 @@ num_epochs = 10000
 num_gen = 1
 num_enc_dec = 5
 lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
-batch_size = 128
+z=10
+samp=128
+batch_size = (samp,z)
 target_dist = "gaussian"
 target_param = (0, 0.02)
 # target_dist = "uniform"
@@ -38,8 +40,8 @@ sigma_list = [1, 2, 4, 8, 16]
 sigma_list = [sigma / base for sigma in sigma_list]
 print_int = 100
 
-# gen = GNet()
-gen=Generator2()
+#gen = GNet()
+gen=Generator_z2(z_dim=z)
 enc = Encoder()
 dec = Decoder()
 
@@ -49,7 +51,7 @@ enc_optimizer = optim.Adam(enc.parameters(), lr=lr)
 dec_optimizer = optim.Adam(dec.parameters(), lr=lr)
 
 
-b = (num_enc_dec,batch_size)
+b = (num_enc_dec,samp)
 data_set= data_sampler2(target_dist, target_param, b)
 
 cum_dis_loss = 0
@@ -59,8 +61,9 @@ for iteration in range(num_epochs):
         enc.zero_grad()
         dec.zero_grad()
         target = data_set[i, :]
-        target = torch.reshape(target, (batch_size, 1))
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        target = torch.reshape(target, (samp, 1))
+        # noise = data_sampler(noise_dist, noise_param, batch_size)
+        noise = data_sampler2(noise_dist, noise_param, batch_size)
         encoded_target = enc.forward(target)
         decoded_target = dec.forward(encoded_target)
         L2_AE_target = (target - decoded_target).pow(2).mean()
@@ -78,8 +81,8 @@ for iteration in range(num_epochs):
     for i in range(num_gen):
         gen.zero_grad()
         target = data_set[i, :]
-        target = torch.reshape(target, (batch_size, 1))
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        target = torch.reshape(target, (samp, 1))
+        noise = data_sampler2(noise_dist, noise_param, batch_size)
         encoded_target = enc.forward(target)
         encoded_noise = enc.forward(gen.forward(noise))
         MMD = torch.sqrt(F.relu(mix_rbf_mmd2(encoded_target, encoded_noise, sigma_list)))
@@ -91,9 +94,9 @@ for iteration in range(num_epochs):
         save_models(gen, enc, str(iteration), "MMD")
         cum_dis_loss = 0
         cum_gen_loss = 0
-        noise = data_sampler(noise_dist, noise_param, batch_size)
+        noise = data_sampler2(noise_dist, noise_param, batch_size)
         transformed_noise = gen.forward(noise)
-        transformed_noise = transformed_noise.data.numpy().reshape((batch_size, 1))
+        transformed_noise = transformed_noise.data.numpy().reshape((samp, 1))
 
         # Visualization
         mu = transformed_noise.mean()
@@ -114,7 +117,7 @@ for iteration in range(num_epochs):
         plt.show()
 print("Done")
 
-noise = data_sampler(noise_dist, noise_param, 10000)
+noise = data_sampler2(noise_dist, noise_param, (10000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
 

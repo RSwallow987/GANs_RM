@@ -1,4 +1,4 @@
-from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2
+from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator
 from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist
 
 import torch
@@ -8,12 +8,13 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=128
+samps=124*2
 num_gen = 1
 num_crit = 5
 lr = 0.001
 wd=0
-z=20
+z=1
+
 batch_size = (num_crit,samps)
 noise_size=(samps,z)
 target_dist = "gaussian"
@@ -30,8 +31,9 @@ noise_param = (0., 1.)
 # noise_param = (-1, 1)
 
 #initialization
-crit=Discriminator_z2()
-gen=Generator_Lz2()
+crit=Discriminator()
+# gen=Generator_Lz2(z_dim=z)
+gen=GNet()
 
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
 crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
@@ -41,7 +43,6 @@ generator_loss = 0
 generator_losses=[]
 
 data_set= data_sampler2(target_dist, target_param, batch_size)
-save_hist(data_set, "WGAN")
 
 #training
 for iteration in range(num_epochs):
@@ -138,3 +139,4 @@ else:
     print("Adequate Model %:",num_breeches*100/len(k))
 
 save_models(gen,crit,"final","WGAN")
+save_hist(data_set, "WGAN")

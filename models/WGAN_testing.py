@@ -1,5 +1,5 @@
 #VaR Backtesting Final Models
-from vanilla_gam import Generator_z2
+from vanilla_gam import Generator_z2, GNet
 from utils import data_sampler2, gen_kde, image_name
 import torch
 import numpy as np
@@ -9,14 +9,15 @@ import seaborn as sns
 from scipy import stats
 data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 
+z=20
 gen = Generator_z2()
-gen.load_state_dict(torch.load(f='../checkpoints/WGAN_ex_4250_14-08-2022-14-19-12.pt', map_location='cpu'))
+gen.load_state_dict(torch.load(f='../checkpoints/WGAN_final_19-08-2022-23-29-34.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)
 
-noise = data_sampler2(noise_dist, noise_param, (100000,20))
+noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
 
@@ -41,7 +42,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/WGAN_12-08-2022-16-15-24.pt')
+x=torch.load(f='../data quantiles/WGAN_14-09-2022-06-16-35.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)

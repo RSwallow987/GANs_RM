@@ -1,5 +1,5 @@
 #VaR Backtesting Final Models
-from vanilla_gam import GNet,Generator2
+from vanilla_gam import GNet,Generator2, Generator_z2
 from utils import data_sampler2, gen_kde, image_name
 import torch
 import numpy as np
@@ -8,21 +8,18 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 
-#out of sample data
-#MMD990009-08-2022-18-15-41.pt - GNet, 2.7% breeches - trained on 5,128 hist samples
-#MMD10008-08-2022-08-16-28.pt - GNet , 13% breeches
-
-
 data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-
-gen = Generator2()
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_9800_09-08-2022-19-15-43.pt', map_location='cpu'))
+z=10
+gen = Generator_z2(z_dim=z)
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_11-09-2022-13-07-30.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)
 
-noise = data_sampler2(noise_dist, noise_param, (100000,1))
+
+
+noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
 
@@ -47,7 +44,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/MMD_09-08-2022-19-16-06.pt')
+x=torch.load(f='../data quantiles/MMD_11-09-2022-13-07-30.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)
@@ -98,3 +95,5 @@ else:
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: Mean",stats.describe(x))
 print("Generated Data: ", stats.describe(transformed_noise))
+
+x1,x2=gen_kde(transformed_noise.reshape(-1))

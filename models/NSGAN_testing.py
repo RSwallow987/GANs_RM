@@ -9,15 +9,15 @@ import seaborn as sns
 from scipy import stats
 
 data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-
-gen = Generator_Lz2()
-gen.load_state_dict(torch.load(f='../checkpoints/NS_10000_17-08-2022-05-41-36.pt', map_location='cpu'))
+z=20
+gen = Generator_Lz2(z_dim=z)
+gen.load_state_dict(torch.load(f='../checkpoints/NS_9500_15-08-2022-20-26-28.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)
 
-noise = data_sampler2(noise_dist, noise_param, (100000,20))
+noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy().reshape(100000)
 
@@ -42,7 +42,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/NS_17-08-2022-05-32-01.pt')
+x=torch.load(f='../data quantiles/NS_15-08-2022-20-20-41.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)

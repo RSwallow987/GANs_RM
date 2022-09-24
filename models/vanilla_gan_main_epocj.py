@@ -12,7 +12,7 @@ samps=128
 num_gen = 1
 num_disc = 5
 lr = 1e-3
-z=20
+z=10
 batch_size = (num_disc,samps)
 noise_size=(samps,z)
 target_dist = "gaussian"
@@ -33,7 +33,7 @@ noise_param = (0., 1.)
 gan_type="NS"
 
 disc=Discriminator_z2()
-gen=Generator_Lz2()
+gen=Generator_Lz2(z_dim=z)
 
 criterion=nn.BCEWithLogitsLoss()
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
@@ -107,6 +107,7 @@ for iteration in range(num_epochs):
         fig.tight_layout()
         plt.show()
 
+save_models(gen,disc,str(iteration),gan_type)
 plt.plot(generator_losses, label='g_losses')
 plt.plot(discriminator_losses, label='d_losses')
 plt.legend()
