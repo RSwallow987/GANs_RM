@@ -12,7 +12,7 @@ data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 z=1
 # gen = Generator_z2(z_dim=z)
 gen=Generator2()
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_10-09-2022-09-57-45.pt', map_location='cpu'))
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_06-09-2022-19-52-50.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
@@ -43,7 +43,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/MMD_10-09-2022-09-57-45.pt')
+x=torch.load(f='../data quantiles/MMD_06-09-2022-19-52-50.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)
