@@ -6,9 +6,11 @@ This repo contains the code used to complete my minor dissertation. The differen
 
 # How to use this repo 
 There are various sections to the project. All the final GAN model checkpoints are included under the 'checkpoints' file. These can be loaded and used to generate data using the various testing files located in the 'testing' directory. Historical datasets used for training the GANs are located in 'data quantiles', this is included for accessing historical VaR in the testing files. 
+You can load a checkpoint by specifying the path to the model checkpoint you're intrested in - using any of the 'testing' files. The corresponding data quantile (historical trianing set) can be loaded by finding the corresponding time stamped set in the 'data quantiles' directory. If you want to specify and train your own gan, any of the model 'epoch' files can be used and run. 
 
 ## Step 1: Updating Directory Information
-
+Update any path specific code to your own directory pathway. This update occurs in 'utils', any testing file used as well as the 'epoch' files
 ## Step 2: Training a GAN Model (Optional)
-
+Run any of the 'epoch' files to train a GAN model - experiment with the hyperparameters within the file or even implement a new GAN archeitecture by defining one in the 'vanilla_gam' file. This can then be loaded like the other GAN models. 
 ## Step 3: Loading a GAN model checkpoint 
+If you just want to see a trained gan - choose your checkpoint model from the checkpoint directory and copy and paste the file path into the relevant testing file. Unfortunetly, for the testing file to run without errors - the correct latent dimention 'z' as well as the GAN model (from utils) must be specified. You can pick up the gan architecture and z dimention required by looking at the error message displayed. 
