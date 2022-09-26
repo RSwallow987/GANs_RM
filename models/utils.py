@@ -37,6 +37,9 @@ def data_sampler2(dist_type, dist_param, batch_size):
     elif dist_type=="cauchy":
         return dist_param[1] * Tensor(np.random.standard_cauchy(((batch_size[0], batch_size[1])))) + 23.
 
+def mixtureofnormals(dist_param1, dist_param2,weights, batch_size):
+        return Tensor(weights[0]*np.random.normal(dist_param1[0], dist_param1[1], batch_size)+ weights[1]*np.random.normal(dist_param2[0], dist_param2[1], batch_size)).requires_grad_()
+
 def save_models(generator, discriminator, epoch, gan_type):
   """ Save models at specific point in time. """
   # at specified directory
