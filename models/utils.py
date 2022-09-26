@@ -6,6 +6,7 @@ import datetime
 import seaborn as sns
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+import math
 
 def get_noise(n_samples, z_dim, device='cpu'):
     '''
@@ -205,3 +206,11 @@ def image_name(gan_type):
   # with open(file_name, 'w') as fp:
   #     print('created', file_name)
   return file_name
+
+def moments_test(real,fake):
+    mu=math.sqrt((real.mean-fake.mean)**2)
+    v=math.sqrt((real.variance-fake.variance)**2)
+    sk=math.sqrt((real.skewness-fake.skewness)**2)
+    k=math.sqrt((real.kurtosis-fake.kurtosis)**2)
+
+    return mu,v,sk,k

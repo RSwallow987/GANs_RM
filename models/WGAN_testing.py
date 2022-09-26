@@ -1,6 +1,6 @@
 #VaR Backtesting Final Models
 from vanilla_gam import Generator_z2, GNet
-from utils import data_sampler2, gen_kde, image_name
+from utils import data_sampler2, gen_kde, image_name, moments_test
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,3 +92,26 @@ else:
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: ",stats.describe(x))
 print("Generated Data: ", stats.describe(transformed_noise))
+
+
+x1,x2=gen_kde(transformed_noise.reshape(-1))
+
+real_moments=stats.describe(x)
+generated_moments=stats.describe(transformed_noise)
+
+mu=[]
+var=[]
+sk=[]
+kur=[]
+for i in range(0,1000):
+    noise = data_sampler2(noise_dist, noise_param, (100000, z))
+    transformed_noise = gen.forward(noise)
+    transformed_noise = transformed_noise.data.numpy().reshape(100000)
+    generated_moments = stats.describe(transformed_noise)
+    x1,x2,x3,x4=moments_test(real_moments,generated_moments)
+    mu.append(x1)
+    var.append(x2)
+    sk.append(x3)
+    kur.append(x4)
+
+print("Results: mu=",sum(mu)/len(mu)," var=", sum(var)/len(var)," skew=", sum(sk)/len(sk), " kurtosis=", sum(kur)/len(kur))

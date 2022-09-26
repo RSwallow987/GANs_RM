@@ -1,6 +1,6 @@
 #VaR Backtesting Final Models
 from vanilla_gam import GNet,Generator2, Generator_z2
-from utils import data_sampler2, gen_kde, image_name
+from utils import data_sampler2, gen_kde, image_name, moments_test
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,15 +9,14 @@ import seaborn as sns
 from scipy import stats
 
 data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-z=10
-gen = Generator_z2(z_dim=z)
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_11-09-2022-13-07-30.pt', map_location='cpu'))
+z=1
+# gen = Generator_z2(z_dim=z)
+gen=Generator2()
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_10-09-2022-09-57-45.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)
-
-
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -44,7 +43,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/MMD_11-09-2022-13-07-30.pt')
+x=torch.load(f='../data quantiles/MMD_10-09-2022-09-57-45.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)
@@ -97,3 +96,23 @@ print("Real Data: Mean",stats.describe(x))
 print("Generated Data: ", stats.describe(transformed_noise))
 
 x1,x2=gen_kde(transformed_noise.reshape(-1))
+
+real_moments=stats.describe(x)
+generated_moments=stats.describe(transformed_noise)
+
+mu=[]
+var=[]
+sk=[]
+kur=[]
+for i in range(0,1000):
+    noise = data_sampler2(noise_dist, noise_param, (100000, z))
+    transformed_noise = gen.forward(noise)
+    transformed_noise = transformed_noise.data.numpy().reshape(100000)
+    generated_moments = stats.describe(transformed_noise)
+    x1,x2,x3,x4=moments_test(real_moments,generated_moments)
+    mu.append(x1)
+    var.append(x2)
+    sk.append(x3)
+    kur.append(x4)
+
+print("Results: mu=",sum(mu)/len(mu)," var=", sum(var)/len(var)," skew=", sum(sk)/len(sk), " kurtosis=", sum(kur)/len(kur))
