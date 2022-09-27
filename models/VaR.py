@@ -44,7 +44,7 @@ def norm_linear_var(current_portfolio, scenarios, window, alpha):
     mu=portfolio_returns.rolling(window=window, center=False, min_periods=window).mean()
     sigma=portfolio_returns.rolling(window=window, center=False, min_periods=window).std()
     vars_nom= (norm.ppf(1 - alpha) * sigma - mu) * current_portfolio.sum()
-    vars=(mu-sigma*norm.ppf(alpha)) #todo check this
+    vars=(mu-sigma*norm.ppf(alpha))
     return vars, vars_nom
 
 def monte_carlo_var(current_portfolio,scenarios, window, alpha):
@@ -86,8 +86,3 @@ def multindex_iloc(df, index):
     label = df.index.levels[0][index]
     return df.iloc[df.index.get_loc(label)]
 
-#todo find out wtf is wrong with cholesky
-#todo breaches (2 methods)
-#todo var nominal at risk factor level ?
-#todo 252 or 250 day var for normal linear, historical and monte carlo
-#todo FRTB var and es

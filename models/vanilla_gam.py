@@ -1,7 +1,5 @@
 from torch import nn
 
-#todo change file name for ease of use
-
 class Generator(nn.Module):
     '''
     Generator Class
