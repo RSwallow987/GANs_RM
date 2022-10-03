@@ -115,3 +115,9 @@ for i in range(0,1000):
     kur.append(x4)
 
 print("Results: mu=",sum(mu)/len(mu)," var=", sum(var)/len(var)," skew=", sum(sk)/len(sk), " kurtosis=", sum(kur)/len(kur))
+
+#Fitting a GMM
+
+from sklearn.mixture import GaussianMixture
+gmm = GaussianMixture(n_components=2)
+gmm.fit(data_set)

@@ -1,20 +1,22 @@
 #VaR Backtesting Final Models
-from vanilla_gam import Generator_z2, GNet, Generator2
-from utils import data_sampler2, gen_kde, image_name
+from vanilla_gam import Generator_Lz2, GNet, Generator2,Generator_z2
+from utils import data_sampler2, gen_kde, image_name, mixtureofnormals
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from scipy import stats
-data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 
-z_mmd=1
-z_ns=20
-gen_mmd = Generator2()
-gen_ns=Generator_z2()
-gen_mmd.load_state_dict(torch.load(f='../checkpoints/MMD_9800_09-08-2022-19-15-43.pt', map_location='cpu'))
-gen_ns.load_state_dict(torch.load(f='../checkpoints/NS_9500_15-08-2022-20-26-28.pt', map_location='cpu'))
+data_set = data_sampler2("gaussian", (0.,0.02), (1000,1))
+# data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+
+z_mmd=20
+z_ns=10
+gen_mmd = Generator_z2()
+gen_ns=Generator_Lz2(z_dim=z_ns)
+gen_mmd.load_state_dict(torch.load(f='../checkpoints/MMD_3100_28-09-2022-16-39-22.pt', map_location='cpu'))
+gen_ns.load_state_dict(torch.load(f='../checkpoints/NS_final_28-09-2022-20-00-58.pt', map_location='cpu'))
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)

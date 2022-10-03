@@ -30,6 +30,36 @@ class Generator(nn.Module):
         '''
         return self.gen(noise)
 
+class GeneratorLeak(nn.Module):
+    '''
+    Generator Class
+    Values:
+        z_dim: the dimension of the noise vector, a scalar
+        sample_dim: the dimension of the samples, fitted for the dataset used, a scalar.
+        hidden_dim: the inner dimension, a scalar
+    '''
+
+    def __init__(self, z_dim=10, sample_dim=1, hidden_dim=128):
+        super(GeneratorLeak, self).__init__()
+        # Build the neural network: 3 layers, 1 output layer
+        self.gen = nn.Sequential(
+            nn.Linear(1, 7),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(7, 13),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(13, 7),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(7, 1)
+        )
+    def forward(self, noise):
+        '''
+        Function for completing a forward pass of the generator: Given a noise tensor,
+        returns generated samples from the learnt distribution.
+        Parameters:
+            noise: a noise tensor with dimensions (n_samples, z_dim)
+        '''
+        return self.gen(noise)
+
 
 class Discriminator(nn.Module):
     '''

@@ -1,5 +1,5 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z, Generator_z2,Discriminator_z2, GNet, Encoder, Generator_Lz2
-from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist
+from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist, mixtureofnormals
 
 import torch
 import torch.nn as nn
@@ -8,7 +8,7 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=128
+samps=64
 num_gen = 1
 num_disc = 5
 lr = 1e-3
@@ -43,10 +43,17 @@ discriminator_losses=[]
 generator_loss = 0
 generator_losses=[]
 
-
 #training
-data_set= data_sampler2(target_dist, target_param, batch_size)
-save_hist(data_set, "NS")
+# data_set= data_sampler2(target_dist, target_param, batch_size)
+b = (num_disc,samps)
+# data_set= data_sampler2(target_dist, target_param, b)
+weights=(0.5,0.5)
+dist1=(1,0.2)
+dist2=(2,0.2)
+tot=num_disc*samps
+data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
+
+
 
 for iteration in range(num_epochs):
     for i in range(num_disc):
@@ -135,3 +142,4 @@ else:
     print("Adequate Model %:",num_breeches*100/len(k))
 
 save_models(gen,disc,"final",gan_type)
+save_hist(data_set, "NS")

@@ -1,5 +1,5 @@
-from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator
-from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist
+from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak
+from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals
 
 import torch
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=124*2
+samps=124
 num_gen = 1
 num_crit = 5
 lr = 0.001
@@ -33,7 +33,7 @@ noise_param = (0., 1.)
 #initialization
 crit=Discriminator()
 # gen=Generator_Lz2(z_dim=z)
-gen=GNet()
+gen=GeneratorLeak()
 
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
 crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
@@ -42,7 +42,14 @@ critic_losses=[]
 generator_loss = 0
 generator_losses=[]
 
-data_set= data_sampler2(target_dist, target_param, batch_size)
+# data_set= data_sampler2(target_dist, target_param, batch_size)
+b = (num_crit,samps)
+# data_set= data_sampler2(target_dist, target_param, b)
+weights=(0.5,0.5)
+dist1=(1,0.2)
+dist2=(2,0.2)
+tot=num_crit*samps
+data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
 
 #training
 for iteration in range(num_epochs):

@@ -10,7 +10,7 @@ import pandas as pd
 
 from vanilla_gam import GNet, Encoder, Decoder,Generator2, Generator_z2
 
-from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist
+from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist,mixtureofnormals
 
 
 # hyper parameters
@@ -18,8 +18,8 @@ num_epochs = 10000
 num_gen = 1
 num_enc_dec = 5
 lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
-z=10
-samp=128
+z=20
+samp=1280
 batch_size = (samp,z)
 target_dist = "gaussian"
 target_param = (0, 0.02)
@@ -41,7 +41,8 @@ sigma_list = [sigma / base for sigma in sigma_list]
 print_int = 100
 
 #gen = GNet()
-gen=Generator_z2(z_dim=z)
+# gen=Generator2()
+gen=Generator_z2()
 enc = Encoder()
 dec = Decoder()
 
@@ -52,7 +53,12 @@ dec_optimizer = optim.Adam(dec.parameters(), lr=lr)
 
 
 b = (num_enc_dec,samp)
-data_set= data_sampler2(target_dist, target_param, b)
+# data_set= data_sampler2(target_dist, target_param, b)
+weights=(0.5,0.5)
+dist1=(1,0.2)
+dist2=(2,0.2)
+tot=num_enc_dec*samp
+data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
 
 cum_dis_loss = 0
 cum_gen_loss = 0
@@ -122,6 +128,7 @@ transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
 
 target = data_sampler(target_dist, target_param, 10000)
+# target=mixtureofnormals(dist1,dist2,weights,tot,b)
 target=target.data.numpy()
 
 df=pd.DataFrame()
