@@ -1,6 +1,6 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3
 from utils import get_noise, data_sampler, save_models
-from utils import getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss
+from utils import getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,get_crit_loss2
 
 import torch
 import matplotlib.pyplot as plt

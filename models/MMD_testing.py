@@ -1,6 +1,6 @@
 #VaR Backtesting Final Models
 from vanilla_gam import GNet,Generator2, Generator_z2
-from utils import data_sampler2, gen_kde, image_name, moments_test, mixtureofnormals
+from utils import data_sampler2, gen_kde, image_name, moments_test, mixtureofnormals3
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,13 +9,23 @@ import seaborn as sns
 from scipy import stats
 
 # data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+# data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+
+num=3
+# data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
+tot=250
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
+
 z=20
 gen = Generator_z2(z_dim=z)
 # gen=Generator2()
 
 
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_02-10-2022-12-27-27.pt', map_location='cpu'))
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_9900_12-10-2022-08-04-44.pt', map_location='cpu'))
 
 #Testing
 noise_dist = "gaussian"
@@ -46,7 +56,7 @@ else:
     print("GAN: Adequate Model: Out of Sample Breeches 99%:", len(breeches99[0]) * 100 / len(k))
 
 #Backtest in sample
-x=torch.load(f='../data quantiles/MMD_02-10-2022-12-27-27.pt')
+x=torch.load(f='../data quantiles/MMD_12-10-2022-08-04-52.pt')
 x=x.reshape(-1).detach().numpy()
 breeches_insample=np.where(x<var95)
 breeches_insample99=np.where(x<var99)
@@ -133,7 +143,7 @@ generated_moments=stats.describe(transformed_noise)
 
 
 from sklearn.mixture import GaussianMixture
-gmm = GaussianMixture(n_components=2)
+gmm = GaussianMixture(n_components=num)
 gmm.fit(data_set.detach().numpy())
 print("Log Likelihood:", gmm.score(transformed_noise.reshape(-1, 1))) #Compute the per-sample average log-likelihood of the given data X.
 print("Means - Mixture:", gmm.means_)

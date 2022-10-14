@@ -7,6 +7,7 @@ import seaborn as sns
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import math
+from scipy import stats
 
 def get_noise(n_samples, z_dim, device='cpu'):
     '''
@@ -41,6 +42,16 @@ def mixtureofnormals(dist_param1, dist_param2,weights, batch_size,shape):
     x1=np.random.normal(dist_param1[0], dist_param1[1], int(weights[0]*batch_size))
     x2=np.random.normal(dist_param2[0], dist_param2[1], int(batch_size*weights[1]))
     mix=np.append(x1,x2)
+    np.random.shuffle(mix)
+    mix=np.reshape(mix,shape)
+    return Tensor(mix).requires_grad_()
+
+def mixtureofnormals3(dist_param1, dist_param2, dist_param3, weights, batch_size, shape):
+    x1=np.random.normal(dist_param1[0], dist_param1[1], int(math.ceil(weights[0]*batch_size)))
+    x2=np.random.normal(dist_param2[0], dist_param2[1], int(batch_size*weights[1]))
+    x3=np.random.normal(dist_param3[0], dist_param3[1], int(batch_size * weights[2]))
+    mix=np.append(x1,x2,axis=None)
+    mix = np.append(mix,x3, axis=None)
     np.random.shuffle(mix)
     mix=np.reshape(mix,shape)
     return Tensor(mix).requires_grad_()
@@ -161,6 +172,22 @@ def get_crit_loss(crit_fake_pred, crit_real_pred, gp, c_lambda):
         crit_loss: a scalar for the critic's loss, accounting for the relevant factors
     '''
     crit_loss = torch.mean(crit_fake_pred)-torch.mean(crit_real_pred)+c_lambda*gp
+    return crit_loss
+
+def get_crit_loss2(crit_fake_pred, crit_real_pred, gp, c_lambda):
+    '''
+    Return the loss of a critic given the critic's scores for fake and real samples,
+    the gradient penalty, and gradient penalty weight.
+    Parameters:
+        crit_fake_pred: the critic's scores of the fake samples
+        crit_real_pred: the critic's scores of the real samples
+        gp: the unweighted gradient penalty
+        c_lambda: the current weight of the gradient penalty
+    Returns:
+        crit_loss: a scalar for the critic's loss, accounting for the relevant factors
+    '''
+    # crit_loss = torch.mean(crit_fake_pred)-torch.mean(crit_real_pred)+c_lambda*gp
+    crit_loss = stats.wasserstein_distance(crit_fake_pred.detach().numpy().flatten(), crit_real_pred.detach().numpy().flatten())+c_lambda*gp
     return crit_loss
 
 def gen_kde(transformed_noise):

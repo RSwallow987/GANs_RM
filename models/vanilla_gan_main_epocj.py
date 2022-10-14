@@ -1,5 +1,5 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z, Generator_z2,Discriminator_z2, GNet, Encoder, Generator_Lz2
-from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist, mixtureofnormals
+from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist, mixtureofnormals3
 
 import torch
 import torch.nn as nn
@@ -8,7 +8,7 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=64
+samps=128*2
 num_gen = 1
 num_disc = 5
 lr = 1e-3
@@ -47,11 +47,12 @@ generator_losses=[]
 # data_set= data_sampler2(target_dist, target_param, batch_size)
 b = (num_disc,samps)
 # data_set= data_sampler2(target_dist, target_param, b)
-weights=(0.5,0.5)
-dist1=(1,0.2)
-dist2=(2,0.2)
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
 tot=num_disc*samps
-data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
 
 
 

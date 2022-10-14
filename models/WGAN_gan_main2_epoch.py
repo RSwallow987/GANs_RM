@@ -1,5 +1,5 @@
 from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak
-from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals
+from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals,get_crit_loss2
 
 import torch
 import matplotlib.pyplot as plt
@@ -66,6 +66,7 @@ for iteration in range(num_epochs):
         gradient = get_gradient(crit, target, fakes, epsilon)
         gp = gradient_penalty(gradient)
         crit_loss = get_crit_loss(pred_fake, pred_real, gp, 10)
+        crit_loss = get_crit_loss2(pred_fake, pred_real, gp, 10)
         crit_loss.backward(retain_graph=True)
         crit_opt.step()
 
