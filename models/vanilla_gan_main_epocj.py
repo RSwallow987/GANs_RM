@@ -8,7 +8,7 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=128*2
+samps=128
 num_gen = 1
 num_disc = 5
 lr = 1e-3
@@ -23,7 +23,9 @@ display_step=500
 # target_param = (22, 24)
 # target_dist = "cauchy"
 # target_param = (23, 1)
-noise_dist = "gaussian"
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
+noise_dist = "uniform"
 noise_param = (0., 1.)
 # noise_dist = "uniform"
 # noise_param = (-1, 1)

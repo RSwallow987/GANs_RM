@@ -1,4 +1,4 @@
-from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak, Generator
+from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak, Generator, Generator2, Discriminator2
 from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals,get_crit_loss2
 
 import torch
@@ -11,7 +11,7 @@ samps=124
 num_gen = 1
 num_crit = 5
 lr = 1e-4
-z=1
+z=20
 
 batch_size = (num_crit,samps)
 noise_size=(samps,z)
@@ -23,15 +23,14 @@ display_step=250
 # target_param = (22, 24)
 # target_dist = "cauchy"
 # target_param = (23, 1)
-noise_dist = "gaussian"
-noise_param = (0., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 #initialization
-crit=Discriminator()
-# gen=Generator_Lz2(z_dim=z)
-gen=Generator()
+crit=Discriminator_z2()
+gen=Generator_Lz2()
 
 
 #gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
@@ -42,6 +41,7 @@ critic_loss = 0
 critic_losses=[]
 generator_loss = 0
 generator_losses=[]
+c=0.01
 
 data_set= data_sampler2(target_dist, target_param, batch_size)
 # b = (num_crit,samps)
@@ -59,30 +59,29 @@ for iteration in range(num_epochs):
         crit_opt.zero_grad()
         target =data_set[i,:]
         target = torch.reshape(target, (samps, 1))
-        # noise = data_sampler2(noise_dist, noise_param, noise_size)
+        noise = data_sampler2(noise_dist, noise_param, noise_size)
         fakes = gen(noise).detach()
         pred_fake = crit(fakes)
         pred_real = crit(target)
-        epsilon = torch.rand(len(target), 1, 1, 1, requires_grad=True)
 
-        gradient = get_gradient(crit, target, fakes, epsilon)
-        gp = gradient_penalty(gradient)
-        crit_loss = get_crit_loss(pred_fake, pred_real, gp, 10)
-        # crit_loss = get_crit_loss2(pred_fake, pred_real, gp, 10)
-        crit_loss.backward(retain_graph=True)
+        loss_fw=pred_real.mean()-pred_fake.mean()
+        loss_fw.backward(retain_graph=True)
         crit_opt.step()
 
-        critic_loss += crit_loss.item() / num_crit
+        for p in crit.parameters():
+            p.data.clamp_(-c, c)
+
+        critic_loss += loss_fw.item() / num_crit
 
         if i == num_crit - 1:
             critic_losses.append(critic_loss)
 
     for i in range(num_gen):
         gen_opt.zero_grad()
-        # noise = data_sampler2(noise_dist, noise_param, noise_size)
+        noise = data_sampler2(noise_dist, noise_param, noise_size)
         samples = gen(noise)
         pred = crit(samples)
-        gen_loss = get_gen_loss(pred)
+        gen_loss = pred.mean()
         gen_loss.backward(retain_graph=True)
         gen_opt.step()
 
@@ -97,11 +96,8 @@ for iteration in range(num_epochs):
         critic_loss = 0
         generator_loss = 0
 
-        save_models(gen, crit, str(iteration), gan_type="WGAN_ex")
+        save_models(gen, crit, str(iteration), gan_type="WGAN")
 
-        # target = data_sampler2(target_dist, target_param, batch_size_target)
-        # target = target.data.numpy().reshape(batch_size_target)
-        # noise = data_sampler2(noise_dist, noise_param, noise_size)
         transformed_noise = gen.forward(noise)
         transformed_noise = transformed_noise.data.numpy().reshape((samps,1))
 

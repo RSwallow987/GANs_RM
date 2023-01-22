@@ -25,8 +25,8 @@ z_mmd=20
 z_ns=10
 gen_mmd = Generator_z2()
 gen_ns=Generator_Lz2(z_dim=z_ns)
-gen_mmd.load_state_dict(torch.load(f='../checkpoints/MMD_final_02-10-2022-22-53-06.pt', map_location='cpu'))
-gen_ns.load_state_dict(torch.load(f='../checkpoints/NS_final_02-10-2022-11-41-17.pt', map_location='cpu'))
+gen_mmd.load_state_dict(torch.load(f='../checkpoints/MMD_9900_12-10-2022-08-04-44.pt', map_location='cpu'))
+gen_ns.load_state_dict(torch.load(f='../checkpoints/NS_final_12-10-2022-07-47-56.pt', map_location='cpu'))
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)

@@ -143,10 +143,12 @@ def gradient_penalty(gradient):
 
     # Calculate the magnitude of every row
     gradient_norm = gradient.norm(2, dim=1)
+    gradients_norm = torch.sqrt(torch.sum(gradient ** 2, dim=1) + 1e-12)
 
     # Penalize the mean squared distance of the gradient norms from 1
     penalty = torch.mean(pow(gradient_norm - torch.ones_like(gradient_norm), 2))
-    return penalty
+    penaltys=((gradients_norm - 1) ** 2).mean()
+    return penaltys
 
 def get_gen_loss(crit_fake_pred):
     '''
