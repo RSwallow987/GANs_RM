@@ -9,9 +9,7 @@ import seaborn as sns
 import pandas as pd
 
 from vanilla_gam import GNet, Encoder, Decoder,Generator2, Generator_z2
-
 from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist,mixtureofnormals3
-
 
 # hyper parameters
 num_epochs = 10000

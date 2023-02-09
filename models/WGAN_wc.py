@@ -1,37 +1,58 @@
+import torch
+import numpy as np
+import torch.nn as nn
+import torch.optim as optim
+from mmd import mix_rbf_mmd2
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
 from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak, Generator, Generator2, Discriminator2
 from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals,get_crit_loss2
 
-import torch
-import matplotlib.pyplot as plt
-import numpy as np
-
 # hyper parameters
 num_epochs = 10000
-samps=124
 num_gen = 1
 num_crit = 5
 lr = 1e-4
 z=20
+samps=128
 
 batch_size = (num_crit,samps)
 noise_size=(samps,z)
+
+# Dist1
 target_dist = "gaussian"
+target_param = (23., 1.)
+noise_dist = "gaussian"
+noise_param = (0., 1.)
+
+# #Dist2
+# target_dist = "lognorm"
 # target_param = (23., 1.)
-target_param=(0.,0.02)
-display_step=250
-# target_dist = "uniform"
-# target_param = (22, 24)
-# target_dist = "cauchy"
-# target_param = (23, 1)
-# noise_dist = "gaussian"
-# noise_param = (0., 1.)
-noise_dist = "uniform"
-noise_param = (-1, 1)
+# noise_dist = "uniform"
+# noise_param = (-1, 1)
+
+#Dist 3
+# weights=(0.07,0.05,0.88)
+# dist1=(0.0282,0.0099)
+# dist2=(-0.0315,0.01356)
+# dist3=(-0.0001,0.0092)
+# tot=num_disc*samps
+# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+
+lambda_AE = 8. #as in paper
+
+# sigma for MMD
+base = 1.0
+sigma_list = [1, 2, 4, 8, 16]
+sigma_list = [sigma / base for sigma in sigma_list]
+print_int = 100
 
 #initialization
 crit=Discriminator_z2()
 gen=Generator_Lz2()
-
 
 #gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
 #crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
@@ -44,15 +65,8 @@ generator_losses=[]
 c=0.01
 
 data_set= data_sampler2(target_dist, target_param, batch_size)
-# b = (num_crit,samps)
-# # data_set= data_sampler2(target_dist, target_param, b)
-# weights=(0.5,0.5)
-# dist1=(1,0.2)
-# dist2=(2,0.2)
-# tot=num_crit*samps
-# data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
-
 noise = data_sampler2(noise_dist, noise_param, noise_size)
+
 #training
 for iteration in range(num_epochs):
     for i in range(num_crit):
@@ -89,9 +103,9 @@ for iteration in range(num_epochs):
         generator_losses.append(generator_loss)
 
 
-    if iteration % display_step == 0 and iteration != 0:
-        print('critic_loss {}, generator_loss {}'.format(critic_loss / (display_step * num_crit),
-                                                         generator_loss / (display_step * num_gen)))
+    if iteration % print_int == 0 and iteration != 0:
+        print('critic_loss {}, generator_loss {}'.format(critic_loss / (print_int* num_crit),
+                                                         generator_loss / (print_int* num_gen)))
 
         critic_loss = 0
         generator_loss = 0

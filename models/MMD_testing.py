@@ -25,8 +25,8 @@ z=20
 gen = Generator_z2(z_dim=z)
 # gen=Generator2()
 
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_9900_12-10-2022-08-04-44.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/MMD_12-10-2022-08-04-52.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_09-02-2023-05-57-14.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/MMD_09-02-2023-05-57-14.pt')
 
 #Testing
 noise_dist = "gaussian"
@@ -40,7 +40,7 @@ transformed_noise = transformed_noise.data.numpy().reshape(100000)
 
 x1,x2 =gen_kde(transformed_noise)
 plt.savefig(image_name("MMD"))
-plt.show()
+# plt.show()
 
 #Backtest
 var95=np.quantile(transformed_noise,0.05)
@@ -95,8 +95,8 @@ df=pd.DataFrame()
 
 df['Actual']=pd.Series(x.flatten())
 df['Generated']=pd.Series(transformed_noise.flatten())
-fig=sns.kdeplot(df['Actual'], shade=True, color='r')
-fig=sns.kdeplot(df['Generated'], shade=True, color='b')
+fig=sns.kdeplot(df['Actual'], fill=True, color='r')
+fig=sns.kdeplot(df['Generated'], fill=True, color='b')
 plt.legend(labels=["Actual","Generated"])
 plt.xlabel("")
 plt.show()
