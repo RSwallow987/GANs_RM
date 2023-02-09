@@ -12,30 +12,47 @@ samps=128
 num_gen = 1
 num_disc = 5
 lr = 1e-3
-z=10
+z=1
 batch_size = (num_disc,samps)
 noise_size=(samps,z)
+
+# Dist1
 target_dist = "gaussian"
-# target_param = (23., 1.)
-target_param=(0.0,0.02)
-display_step=500
-# target_dist = "uniform"
-# target_param = (22, 24)
-# target_dist = "cauchy"
-# target_param = (23, 1)
-# noise_dist = "gaussian"
-# noise_param = (0., 1.)
-noise_dist = "uniform"
+target_param = (23., 1.)
+noise_dist = "gaussian"
 noise_param = (0., 1.)
+
+# #Dist2
+# target_dist = "lognorm"
+# target_param = (23., 1.)
 # noise_dist = "uniform"
 # noise_param = (-1, 1)
 
+#Dist 3
+# weights=(0.07,0.05,0.88)
+# dist1=(0.0282,0.0099)
+# dist2=(-0.0315,0.01356)
+# dist3=(-0.0001,0.0092)
+# tot=num_disc*samps
+# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+
+display_step=500
+
+#training
+# data_set= data_sampler2(target_dist, target_param, batch_size)
+b = (num_disc,samps)
+data_set= data_sampler2(target_dist, target_param, b)
+
+
 #initialization
 #_______________________________CHANGE____________________________#
-gan_type="NS"
+gan_type="NS_re"
 
-disc=Discriminator_z2()
-gen=Generator_Lz2(z_dim=z)
+# disc=Discriminator_z2()
+# gen=Generator_z2(z_dim=z)
+
+disc=Discriminator()
+gen=Generator()
 
 criterion=nn.BCEWithLogitsLoss()
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
@@ -44,18 +61,6 @@ discriminator_loss = 0
 discriminator_losses=[]
 generator_loss = 0
 generator_losses=[]
-
-#training
-# data_set= data_sampler2(target_dist, target_param, batch_size)
-b = (num_disc,samps)
-# data_set= data_sampler2(target_dist, target_param, b)
-weights=(0.07,0.05,0.88)
-dist1=(0.0282,0.0099)
-dist2=(-0.0315,0.01356)
-dist3=(-0.0001,0.0092)
-tot=num_disc*samps
-data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
-
 
 
 for iteration in range(num_epochs):

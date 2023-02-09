@@ -8,6 +8,7 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import math
 from scipy import stats
+from torch.autograd import Variable
 
 def get_noise(n_samples, z_dim, device='cpu'):
     '''
@@ -29,6 +30,8 @@ def data_sampler(dist_type, dist_param, batch_size=1):
         return Tensor(np.random.uniform(dist_param[0], dist_param[1], (batch_size, 1))).requires_grad_()
     elif dist_type=="cauchy":
         return dist_param[1] * Tensor(np.random.standard_cauchy((batch_size, 1))) + 23.
+    elif dist_type=="lognorm":
+         return Tensor(np.random.lognormal(dist_param[0], dist_param[1], (batch_size,1))).requires_grad_()
 
 def data_sampler2(dist_type, dist_param, batch_size):
     if dist_type=="gaussian":
@@ -37,6 +40,8 @@ def data_sampler2(dist_type, dist_param, batch_size):
         return Tensor(np.random.uniform(dist_param[0], dist_param[1], (batch_size[0], batch_size[1]))).requires_grad_()
     elif dist_type=="cauchy":
         return dist_param[1] * Tensor(np.random.standard_cauchy(((batch_size[0], batch_size[1])))) + 23.
+    elif dist_type=="lognorm":
+         return Tensor(np.random.lognormal(dist_param[0], dist_param[1], batch_size)).requires_grad_()
 
 def mixtureofnormals(dist_param1, dist_param2,weights, batch_size,shape):
     x1=np.random.normal(dist_param1[0], dist_param1[1], int(weights[0]*batch_size))
@@ -101,34 +106,36 @@ def rolling_stats(returns, window):
     cov=returns.rolling(window=window, center=False, min_periods=window, method='table').cov()
     return mu, sigma, cov
 
-def get_gradient(crit, real, fake, epsilon):
+def get_gradient(crit, real, fake):
     '''
     Return the gradient of the critic's scores with respect to mixes of real and fake samples.
     Parameters:
         crit: the critic model
         real: a batch of real samples
         fake: a batch of fake samples
-        epsilon: a vector of the uniformly random proportions of real/fake per mixed sample
     Returns:
         gradient: the gradient of the critic's scores, with respect to the mixed sample
     '''
     # Mix the samples together
-    mixed_sample = real * epsilon + fake * (1 - epsilon)
-    # Calculate the critic's scores on the mixed sample
-    mixed_scores = crit(mixed_sample)
+    epsilon = torch.rand(len(real), 1, 1, 1)
+    mixed_sample = real*epsilon + fake*(1 - epsilon)
+    interpolation = Variable(mixed_sample, requires_grad=True)
+
+    interpolation_logits = crit(interpolation)
+    grad_outputs = torch.ones(interpolation_logits.size())
     # Take the gradient of the scores with respect to the sample
     gradient = torch.autograd.grad(
-        inputs=mixed_sample,
-        outputs=mixed_scores,
-        # These other parameters have to do with the pytorch autograd engine works
-        grad_outputs=torch.ones_like(mixed_scores),
+        inputs=interpolation,
+        outputs=interpolation_logits,
+        grad_outputs=grad_outputs,
         create_graph=True,
         retain_graph=True,
     )[0]
+
     return gradient
 
 
-def gradient_penalty(gradient):
+def gradient_penalty(gradient,l):
     '''
     Return the gradient penalty, given a gradient.
     Given a batch of sample gradients, you calculate the magnitude of each sample's gradient
@@ -142,12 +149,12 @@ def gradient_penalty(gradient):
     gradient = gradient.view(len(gradient), -1)
 
     # Calculate the magnitude of every row
-    gradient_norm = gradient.norm(2, dim=1)
+    # gradient_norm = gradient.norm(2, dim=1)
     gradients_norm = torch.sqrt(torch.sum(gradient ** 2, dim=1) + 1e-12)
 
-    # Penalize the mean squared distance of the gradient norms from 1
-    penalty = torch.mean(pow(gradient_norm - torch.ones_like(gradient_norm), 2))
-    penaltys=((gradients_norm - 1) ** 2).mean()
+    # # Penalize the mean squared distance of the gradient norms from 1
+    # penalty = torch.mean(pow(gradient_norm - torch.ones_like(gradient_norm), 2))
+    penaltys= l*((gradients_norm - 1) ** 2).mean()
     return penaltys
 
 def get_gen_loss(crit_fake_pred):

@@ -19,18 +19,28 @@ num_gen = 1
 num_enc_dec = 5
 lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
 z=20
-samp=128*2
+samp=128
 batch_size = (samp,z)
+
+# Dist1
 target_dist = "gaussian"
-target_param = (0, 0.02)
-# target_dist = "uniform"
-# target_param = (22, 24)
-# target_dist = "cauchy"
-# target_param = (23, 1)
+target_param = (23., 1.)
 noise_dist = "gaussian"
 noise_param = (0., 1.)
+
+# #Dist2
+# target_dist = "lognorm"
+# target_param = (23., 1.)
 # noise_dist = "uniform"
 # noise_param = (-1, 1)
+
+#Dist 3
+# weights=(0.07,0.05,0.88)
+# dist1=(0.0282,0.0099)
+# dist2=(-0.0315,0.01356)
+# dist3=(-0.0001,0.0092)
+# tot=num_disc*samps
+# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
 
 lambda_AE = 8. #as in paper
 
@@ -53,13 +63,7 @@ dec_optimizer = optim.Adam(dec.parameters(), lr=lr)
 
 
 b = (num_enc_dec,samp)
-# data_set= data_sampler2(target_dist, target_param, b)
-weights=(0.07,0.05,0.88)
-dist1=(0.0282,0.0099)
-dist2=(-0.0315,0.01356)
-dist3=(-0.0001,0.0092)
-tot=num_enc_dec*samp
-data_set=mixtureofnormals3(dist1,dist2,dist3, weights,tot,b)
+data_set= data_sampler2(target_dist, target_param, b)
 
 cum_dis_loss = 0
 cum_gen_loss = 0
@@ -128,9 +132,9 @@ noise = data_sampler2(noise_dist, noise_param, (10000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
 
-# target = data_sampler(target_dist, target_param, 10000)
+target = data_sampler(target_dist, target_param, 10000)
 # target=mixtureofnormals(dist1,dist2,weights,tot,b)
-data_set=mixtureofnormals3(dist1,dist2,dist3, weights,10000,(10000,1))
+# data_set=mixtureofnormals3(dist1,dist2,dist3, weights,10000,(10000,1))
 target=target.data.numpy()
 
 df=pd.DataFrame()
