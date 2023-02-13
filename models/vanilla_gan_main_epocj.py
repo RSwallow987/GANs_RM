@@ -8,25 +8,25 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=128
+samps=64 #124
 num_gen = 1
 num_disc = 5
-lr = 1e-3
+lr = 1e-4
 z=1
 batch_size = (num_disc,samps)
 noise_size=(samps,z)
 
 # Dist1
-target_dist = "gaussian"
-target_param = (23., 1.)
-noise_dist = "gaussian"
-noise_param = (0., 1.)
+# target_dist = "gaussian"
+# target_param = (23., 1.)
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
 
 # #Dist2
-# target_dist = "lognorm"
-# target_param = (23., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+target_dist = "lognorm"
+target_param = (23., 1.)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 #Dist 3
 # weights=(0.07,0.05,0.88)
@@ -46,13 +46,15 @@ data_set= data_sampler2(target_dist, target_param, b)
 
 #initialization
 #_______________________________CHANGE____________________________#
-gan_type="NS_re"
+gan_type="NS_23"
 
 # disc=Discriminator_z2()
 # gen=Generator_z2(z_dim=z)
 
-disc=Discriminator()
-gen=Generator()
+# disc=Discriminator_z2()
+# gen=Generator_z2(z_dim=z)
+gen=Generator3()
+disc=Discriminator3()
 
 criterion=nn.BCEWithLogitsLoss()
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
@@ -150,4 +152,4 @@ else:
     print("Adequate Model %:",num_breeches*100/len(k))
 
 save_models(gen,disc,"final",gan_type)
-save_hist(data_set, "NS")
+save_hist(data_set, gan_type)

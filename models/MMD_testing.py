@@ -51,6 +51,12 @@ num_breeches=len(breeches[0])
 breeches99=np.where(k<var99)
 
 #ETL
+b5=np.array(breeches)
+b1= np.array(breeches99)
+ETl_1=b1.mean()
+ETl_5=b5.mean()
+
+#ETL
 ETl_1=transformed_noise[transformed_noise<var99].mean()
 ETl_5=transformed_noise[transformed_noise<var95].mean()
 

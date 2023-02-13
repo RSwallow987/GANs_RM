@@ -226,15 +226,15 @@ def gen_kde(transformed_noise):
     ax.plot(kde.support, kde.density, lw=3, label="KDE from samples", zorder=10)
 
     # Plot the samples
-    ax.scatter(
-        transformed_noise,
-        np.abs(np.random.randn(transformed_noise.size)) / 40,
-        marker="x",
-        color="red",
-        zorder=20,
-        label="Samples",
-        alpha=0.5,
-    )
+    # ax.scatter(
+    #     transformed_noise,
+    #     np.abs(np.random.randn(transformed_noise.size)) / 40,
+    #     marker="x",
+    #     color="red",
+    #     zorder=20,
+    #     label="Samples",
+    #     alpha=0.5,
+    # )
 
     ax.legend(loc="best")
     ax.grid(True, zorder=-5)

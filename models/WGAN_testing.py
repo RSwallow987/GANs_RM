@@ -1,5 +1,5 @@
 #VaR Backtesting Final Models
-from vanilla_gam import Generator_z2, GNet
+from vanilla_gam import Generator_z2, GNet,Generator_Lz2
 from utils import data_sampler2, gen_kde, image_name, moments_test
 import torch
 import numpy as np
@@ -10,6 +10,7 @@ from scipy import stats
 
 # data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 data_set = data_sampler2("gaussian", (23,1), (252,1))
+moment_set=data_sampler2("gaussian", (23,1), (10000,1))
 # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
 
 # num=3
@@ -22,16 +23,19 @@ data_set = data_sampler2("gaussian", (23,1), (252,1))
 # data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
 
 z=20
-gen = Generator_z2()
+gen=Generator_Lz2()
 
-gen.load_state_dict(torch.load(f='../checkpoints/WGAN_final_19-08-2022-23-29-34.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/WGAN_14-09-2022-06-16-35.pt')
+#WGAN_final_22-01-2023-12-16-38.pt
+gen.load_state_dict(torch.load(f='../checkpoints/WGAN_final_09-02-2023-06-36-57.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/WGAN_09-02-2023-06-36-57.pt')
 
 #Testing
 noise_dist = "gaussian"
 noise_param = (0., 1.)
 # noise_dist = "uniform"
 # noise_param = (-1, 1)
+
+target_param = (23.,1.)
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -40,6 +44,7 @@ transformed_noise = transformed_noise.data.numpy().reshape(100000)
 x1,x2 =gen_kde(transformed_noise)
 plt.savefig(image_name("WGAN"))
 plt.show()
+plt.clf()
 
 #Backtest
 var95=np.quantile(transformed_noise,0.05)
@@ -49,8 +54,10 @@ breeches=np.where(k<var95)
 num_breeches=len(breeches[0])
 breeches99=np.where(k<var99)
 #ETL
-ETl_1=transformed_noise[transformed_noise<var99].mean()
-ETl_5=transformed_noise[transformed_noise<var95].mean()
+b5=np.array(breeches)
+b1= np.array(breeches99)
+ETl_1=b1.mean()
+ETl_5=b5.mean()
 
 print("ETL 95%", ETl_5)
 print("ETL 99%", ETl_1)
@@ -102,6 +109,7 @@ fig=sns.kdeplot(df['Generated'], shade=True, color='b')
 plt.legend(labels=["Actual","Generated"])
 plt.xlabel("")
 plt.show()
+plt.clf()
 
 #KS Stats Testing
 ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
@@ -110,53 +118,54 @@ if ks_test.pvalue <0.05:
 else:
     print("Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
 
-#CVM Stats Testing
-cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='exact')
+# #CVM Stats Testing
+cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='asymptotic')
 if cvm_test.pvalue < 0.05:
     print(
-        "p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
+        "CVM p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
         cvm_test.pvalue)
 else:
-    print("Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
+    print("CVM: Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
 
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: ",stats.describe(x))
 print("Generated Data: ", stats.describe(transformed_noise))
 
 x1,x2=gen_kde(transformed_noise.reshape(-1))
+plt.clf()
 
 real_moments=stats.describe(x)
-real_moments2=stats.describe(data_sampler2("gaussian", (0.,0.02), (10000,1)).detach().numpy())
+real_moments2=stats.describe(moment_set.detach().numpy())
 generated_moments=stats.describe(transformed_noise)
 
-mu=[]
-var=[]
-sk=[]
-kur=[]
-mug=[]
-varg=[]
-skg=[]
-kurg=[]
-for i in range(0,1000):
-    noise = data_sampler2(noise_dist, noise_param, (100000, z))
-    transformed_noise = gen.forward(noise)
-    transformed_noise = transformed_noise.data.numpy().reshape(100000)
-    generated_moments = stats.describe(transformed_noise)
-    x1,x2,x3,x4=moments_test(real_moments,generated_moments)
-    mu.append(x1)
-    var.append(x2)
-    sk.append(x3)
-    kur.append(x4)
-    x1, x2, x3, x4 = moments_test(real_moments2, generated_moments)
-    mug.append(x1)
-    varg.append(x2)
-    skg.append(x3)
-    kurg.append(x4)
+# mu=[]
+# var=[]
+# sk=[]
+# kur=[]
+# mug=[]
+# varg=[]
+# skg=[]
+# kurg=[]
+# for i in range(0,1000):
+#     noise = data_sampler2(noise_dist, noise_param, (100000, z))
+#     transformed_noise = gen.forward(noise)
+#     transformed_noise = transformed_noise.data.numpy().reshape(100000)
+#     generated_moments = stats.describe(transformed_noise)
+#     x1,x2,x3,x4=moments_test(real_moments,generated_moments)
+#     mu.append(x1)
+#     var.append(x2)
+#     sk.append(x3)
+#     kur.append(x4)
+#     x1, x2, x3, x4 = moments_test(real_moments2, generated_moments)
+#     mug.append(x1)
+#     varg.append(x2)
+#     skg.append(x3)
+#     kurg.append(x4)
 
-print("Results for historical : mu=", sum(mu) / len(mu), " var=", sum(var) / len(var), " skew=", sum(sk) / len(sk),
-      " kurtosis=", sum(kur) / len(kur))
-print("Results for 10000 set : mu=", sum(mug) / len(mug), " var=", sum(varg) / len(varg), " skew=", sum(skg) / len(skg),
-      " kurtosis=", sum(kurg) / len(kurg))
+# print("Results for historical : mu=", sum(mu) / len(mu), " var=", sum(var) / len(var), " skew=", sum(sk) / len(sk),
+#       " kurtosis=", sum(kur) / len(kur))
+# print("Results for 10000 set : mu=", sum(mug) / len(mug), " var=", sum(varg) / len(varg), " skew=", sum(skg) / len(skg),
+#       " kurtosis=", sum(kurg) / len(kurg))
 
 # from sklearn.mixture import GaussianMixture
 # gmm = GaussianMixture(n_components=num)
@@ -165,8 +174,7 @@ print("Results for 10000 set : mu=", sum(mug) / len(mug), " var=", sum(varg) / l
 # print("Means - Mixture:", gmm.means_)
 # print("Co-variances - Mixture:", gmm.covariances_)
 
-# Cumulative Distribution Plot
-sns.histplot(x=transformed_noise, hue='Group', bins=len(df), stat="density",
-             element="step", fill=False, cumulative=True, common_norm=False);
-plt.title("Cumulative distribution function");
-print("Results: mu=",sum(mu)/len(mu)," var=", sum(var)/len(var)," skew=", sum(sk)/len(sk), " kurtosis=", sum(kur)/len(kur))
+plt_df=df.melt()
+fig3=sns.ecdfplot(data=plt_df, x='value',hue='variable')
+plt.legend(labels=["Actual","Generated"])
+plt.show()
