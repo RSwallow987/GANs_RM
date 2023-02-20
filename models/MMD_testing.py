@@ -10,6 +10,7 @@ from scipy import stats
 
 # data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 data_set = data_sampler2("gaussian", (23,1), (252,1))
+moment_set=data_sampler2("gaussian", (23,1), (10000,1))
 # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
 
 # num=3
@@ -22,17 +23,18 @@ data_set = data_sampler2("gaussian", (23,1), (252,1))
 # data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
 
 z=20
-gen = Generator_z2(z_dim=z)
-# gen=Generator2()
+# gen = Generator2()
+gen=Generator_z2()
 
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_09-02-2023-05-57-14.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/MMD_09-02-2023-05-57-14.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_18-02-2023-11-58-11.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/MMD_18-02-2023-11-58-11.pt')
 
-#Testing
-noise_dist = "gaussian"
-noise_param = (0., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+#TestingMMD_final_18-02-2023-09-40-11.pt
+# noise_param = (0., 1.)
+noise_dist = "uniform"
+noise_param = (-1, 1)
+
+target_param = (23.,1.)
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -40,7 +42,8 @@ transformed_noise = transformed_noise.data.numpy().reshape(100000)
 
 x1,x2 =gen_kde(transformed_noise)
 plt.savefig(image_name("MMD"))
-# plt.show()
+plt.show()
+plt.clf()
 
 #Backtest
 var95=np.quantile(transformed_noise,0.05)
@@ -89,6 +92,17 @@ breeches_hist=np.where(k<var95_hist)
 breeches_hist99=np.where(k<var99_hist)
 num_breeches_hist=len(breeches_hist[0])
 
+# ETL
+b5_in = np.array(breeches_insample)
+b1_in = np.array(breeches_insample99)
+ETl_1_in = b1_in.mean()
+ETl_5_in = b5_in.mean()
+
+print("ETL 95% generated:", ETl_5)
+print("ETL 95% sample", ETl_5_in)
+print("ETL 99% generated", ETl_1)
+print("ETL 99% sample", ETl_1_in)
+
 if num_breeches_hist>len(x)*0.05:
     print("Breaches (Hist) 95%:",num_breeches_hist*100/len(k))
     print("Breaches (Hist) 99%:", len(breeches_hist99[0]) * 100 / len(k))
@@ -110,27 +124,28 @@ plt.show()
 #KS Stats Testing
 ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
 if ks_test.pvalue <0.05:
-    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
+    print("KS p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
 else:
-    print("Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
+    print("KS Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
 
 #CVM Stats Testing
-cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='exact')
+cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='asymptotic')
 if cvm_test.pvalue < 0.05:
     print(
-        "p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
+        "CVM p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
         cvm_test.pvalue)
 else:
-    print("Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
+    print("CVM Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
 
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: Mean",stats.describe(x))
 print("Generated Data: ", stats.describe(transformed_noise))
 
 x1,x2=gen_kde(transformed_noise.reshape(-1))
+plt.clf()
 
 real_moments=stats.describe(x)
-real_moments2=stats.describe(data_sampler2("gaussian", (0.,0.02), (10000,1)).detach().numpy())
+real_moments2=stats.describe(moment_set.detach().numpy())
 generated_moments=stats.describe(transformed_noise)
 
 mu=[]
@@ -141,7 +156,7 @@ mug=[]
 varg=[]
 skg=[]
 kurg=[]
-for i in range(0,1000):
+for i in range(0,50):
     noise = data_sampler2(noise_dist, noise_param, (100000, z))
     transformed_noise = gen.forward(noise)
     transformed_noise = transformed_noise.data.numpy().reshape(100000)
@@ -169,6 +184,7 @@ print("Results for 10000 set : mu=",sum(mug)/len(mug)," var=", sum(varg)/len(var
 # print("Co-variances - Mixture:", gmm.covariances_)
 
 #Cumulative Distribution Plot
-sns.histplot(x=transformed_noise, hue='Group', bins=len(df), stat="density",
-             element="step", fill=False, cumulative=True, common_norm=False);
-plt.title("Cumulative distribution function");
+plt_df=df.melt()
+fig3=sns.ecdfplot(data=plt_df, x='value',hue='variable')
+plt.legend(labels=["Actual","Generated"])
+plt.show()

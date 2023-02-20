@@ -23,10 +23,6 @@ def mix_rbf_mmd2(X, Y, sigma_list, biased=True):
     # return _mmd2(K_XX, K_XY, K_YY, const_diagonal=d, biased=biased)
     return _mmd2(K_XX, K_XY, K_YY, const_diagonal=False, biased=biased)
 
-################################################################################
-# Helper functions to compute variances based on kernel matrices
-################################################################################
-
 
 def _mmd2(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
     m = K_XX.size(0)    # assume X, Y are same shape

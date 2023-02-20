@@ -17,20 +17,20 @@ num_gen = 1
 num_enc_dec = 5
 lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
 z=20
-samp=128
+samp=128*2
 batch_size = (samp,z)
 
 # Dist1
 target_dist = "gaussian"
 target_param = (23., 1.)
-noise_dist = "gaussian"
-noise_param = (0., 1.)
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
 
 # #Dist2
 # target_dist = "lognorm"
 # target_param = (23., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 #Dist 3
 # weights=(0.07,0.05,0.88)
@@ -48,7 +48,7 @@ sigma_list = [1, 2, 4, 8, 16]
 sigma_list = [sigma / base for sigma in sigma_list]
 print_int = 100
 
-#gen = GNet()
+# gen = GNet()
 # gen=Generator2()
 gen=Generator_z2()
 enc = Encoder()

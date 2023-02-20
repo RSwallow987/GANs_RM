@@ -23,14 +23,14 @@ moment_set=data_sampler2("gaussian", (23,1), (10000,1))
 
 z=20
 gen = Generator_Lz2(z_dim=z)
-gen.load_state_dict(torch.load(f='../checkpoints/NS_23_7000_13-02-2023-20-02-47.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/NS_23_13-02-2023-20-04-26.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/NS_23_9400_19-02-2023-14-26-40.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/NS_23_19-02-2023-14-27-00.pt')
 
 #Testing
-noise_dist = "gaussian"
-noise_param = (0., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 target_param = (23.,1.)
 

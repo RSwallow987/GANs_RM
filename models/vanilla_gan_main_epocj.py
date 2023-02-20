@@ -1,5 +1,6 @@
 from vanilla_gam import Generator, Discriminator, Generator2, Discriminator2, Generator3, Discriminator3, Generator_z, Generator_z2,Discriminator_z2, GNet, Encoder, Generator_Lz2
-from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist, mixtureofnormals3
+from utils import get_noise, data_sampler, save_models,  getstocks, gen_kde, data_sampler2,save_hist, mixtureofnormals3,mixtureofnormals
+
 
 import torch
 import torch.nn as nn
@@ -8,25 +9,26 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=64 #124
+samps=128*2 #124
 num_gen = 1
 num_disc = 5
 lr = 1e-4
-z=1
+z=20
 batch_size = (num_disc,samps)
 noise_size=(samps,z)
+b = (num_disc,samps)
 
 # Dist1
 # target_dist = "gaussian"
 # target_param = (23., 1.)
-# noise_dist = "gaussian"
-# noise_param = (0., 1.)
+noise_dist = "gaussian"
+noise_param = (0., 1.)
 
 # #Dist2
-target_dist = "lognorm"
-target_param = (23., 1.)
-noise_dist = "uniform"
-noise_param = (-1, 1)
+# target_dist = "lognorm"
+# target_param = (23., 1.)
+# noise_dist = "uniform"
+# noise_param = (-1, 1)
 
 #Dist 3
 # weights=(0.07,0.05,0.88)
@@ -36,25 +38,31 @@ noise_param = (-1, 1)
 # tot=num_disc*samps
 # data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
 
-display_step=500
+#Dist4
+weights=(0.5,0.5)
+dist1=(1.,0.2)
+dist2=(2,0.2)
+tot=num_disc*samps
+data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
+
+display_step=200
 
 #training
 # data_set= data_sampler2(target_dist, target_param, batch_size)
-b = (num_disc,samps)
-data_set= data_sampler2(target_dist, target_param, b)
+# data_set= data_sampler2(target_dist, target_param, b)
 
 
 #initialization
 #_______________________________CHANGE____________________________#
 gan_type="NS_23"
 
-# disc=Discriminator_z2()
-# gen=Generator_z2(z_dim=z)
+disc=Discriminator_z2()
+gen=Generator_z2(z_dim=z)
 
-# disc=Discriminator_z2()
-# gen=Generator_z2(z_dim=z)
-gen=Generator3()
-disc=Discriminator3()
+# disc=Discriminator()
+# gen=Generator_z(z_dim=z)
+# gen=Generator3()
+# disc=Discriminator3()
 
 criterion=nn.BCEWithLogitsLoss()
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)

@@ -9,38 +9,47 @@ import seaborn as sns
 import pandas as pd
 
 from vanilla_gam import Discriminator_z2, Generator_z2, Generator_Lz2,GNet, Discriminator, GeneratorLeak, Generator, Generator2, Discriminator2
-from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals,get_crit_loss2
+from utils import data_sampler2,  save_models,  getstocks, gradient_penalty, get_gradient, get_gen_loss, get_crit_loss,gen_kde, save_hist, mixtureofnormals,get_crit_loss2,mixtureofnormals3
 
 # hyper parameters
 num_epochs = 10000
 num_gen = 1
 num_crit = 5
 lr = 1e-4
-z=20
+z=10
 samps=128
 
 batch_size = (num_crit,samps)
 noise_size=(samps,z)
 
 # Dist1
-target_dist = "gaussian"
-target_param = (23., 1.)
-noise_dist = "gaussian"
-noise_param = (0., 1.)
+# target_dist = "gaussian"
+# target_param = (23., 1.)
+#noise_dist = "gaussian"
+#noise_param = (0., 1.)
+b = (num_crit,samps)
 
 # #Dist2
 # target_dist = "lognorm"
 # target_param = (23., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 #Dist 3
 # weights=(0.07,0.05,0.88)
 # dist1=(0.0282,0.0099)
 # dist2=(-0.0315,0.01356)
 # dist3=(-0.0001,0.0092)
-# tot=num_disc*samps
+# tot=num_crit*samps
 # data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+
+#Dist4
+weights=(0.5,0.5)
+dist1=(1.,0.2)
+dist2=(2.,0.2)
+tot=num_crit*samps
+data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
+
 
 lambda_AE = 8. #as in paper
 
@@ -52,7 +61,7 @@ print_int = 100
 
 #initialization
 crit=Discriminator_z2()
-gen=Generator_Lz2()
+gen=Generator_Lz2(z_dim=z)
 
 #gen_opt = torch.optim.Adam(gen.parameters(), lr=lr, weight_decay=wd)
 #crit_opt = torch.optim.Adam(crit.parameters(), lr=lr,weight_decay=wd)
@@ -64,7 +73,7 @@ generator_loss = 0
 generator_losses=[]
 c=0.01
 
-data_set= data_sampler2(target_dist, target_param, batch_size)
+# data_set= data_sampler2(target_dist, target_param, batch_size)
 noise = data_sampler2(noise_dist, noise_param, noise_size)
 
 #training
