@@ -1,6 +1,6 @@
 #VaR Backtesting Final Models
 from vanilla_gam import GNet,Generator2, Generator_z2
-from utils import data_sampler2, gen_kde, image_name, moments_test, mixtureofnormals3
+from utils import data_sampler2, gen_kde, image_name, moments_test, mixtureofnormals3,mixtureofnormals
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,32 +9,34 @@ import seaborn as sns
 from scipy import stats
 
 # data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-data_set = data_sampler2("gaussian", (23,1), (252,1))
-moment_set=data_sampler2("gaussian", (23,1), (10000,1))
-# data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+# data_set = data_sampler2("gaussian", (23,1), (252,1))
+# moment_set=data_sampler2("gaussian", (23,1), (10000,1))
+data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+moment_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),10000,(10000,1))
 
-# num=3
-# # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
-# weights=(0.07,0.05,0.88)
-# dist1=(0.0282,0.0099)
-# dist2=(-0.0315,0.01356)
-# dist3=(-0.0001,0.0092)
-# tot=250
-# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
-
+num=3
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
+tot=250
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
+moment_set=mixtureofnormals3(dist1,dist2,dist3,weights,1000,(1000,1))
 z=20
 # gen = Generator2()
 gen=Generator_z2()
 
-gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_18-02-2023-11-58-11.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/MMD_18-02-2023-11-58-11.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/MMD_final_24-02-2023-06-31-39.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/MMD_24-02-2023-06-31-39.pt')
 
 #TestingMMD_final_18-02-2023-09-40-11.pt
 # noise_param = (0., 1.)
 noise_dist = "uniform"
 noise_param = (-1, 1)
+# noise_dist = "gaussian"
+# noise_param = (0, 1)
 
-target_param = (23.,1.)
+# target_param = (23.,1.)
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -124,18 +126,18 @@ plt.show()
 #KS Stats Testing
 ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
 if ks_test.pvalue <0.05:
-    print("KS p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
+    print("KS p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test)
 else:
-    print("KS Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
+    print("KS Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test)
 
 #CVM Stats Testing
 cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='asymptotic')
 if cvm_test.pvalue < 0.05:
     print(
         "CVM p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
-        cvm_test.pvalue)
+        cvm_test)
 else:
-    print("CVM Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
+    print("CVM Null Hypothesis accepted: From same distribution. P-value: ", cvm_test)
 
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: Mean",stats.describe(x))

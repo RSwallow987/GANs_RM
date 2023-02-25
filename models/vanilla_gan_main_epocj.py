@@ -9,7 +9,7 @@ import numpy as np
 
 # hyper parameters
 num_epochs = 10000
-samps=128*2 #124
+samps=128*2
 num_gen = 1
 num_disc = 5
 lr = 1e-4
@@ -21,29 +21,29 @@ b = (num_disc,samps)
 # Dist1
 # target_dist = "gaussian"
 # target_param = (23., 1.)
-noise_dist = "gaussian"
-noise_param = (0., 1.)
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
 
 # #Dist2
 # target_dist = "lognorm"
 # target_param = (23., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 #Dist 3
-# weights=(0.07,0.05,0.88)
-# dist1=(0.0282,0.0099)
-# dist2=(-0.0315,0.01356)
-# dist3=(-0.0001,0.0092)
-# tot=num_disc*samps
-# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
-
-#Dist4
-weights=(0.5,0.5)
-dist1=(1.,0.2)
-dist2=(2,0.2)
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
 tot=num_disc*samps
-data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+
+# #Dist4
+# weights=(0.5,0.5)
+# dist1=(1.,0.2)
+# dist2=(2,0.2)
+# tot=num_disc*samps
+# data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
 
 display_step=200
 

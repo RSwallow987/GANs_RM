@@ -8,44 +8,41 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 
-# data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
 # data_set = data_sampler2("gaussian", (23,1), (252,1))
 # moment_set=data_sampler2("gaussian", (23,1), (10000,1))
 # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
 
-# num=3
-# # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
-# weights=(0.07,0.05,0.88)
-# dist1=(0.0282,0.0099)
-# dist2=(-0.0315,0.01356)
-# dist3=(-0.0001,0.0092)
-# tot=250
-# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
-# target_param = (23.,1.)
-
-#Dist4
-weights=(0.5,0.5)
-dist1=(1.,0.2)
-dist2=(2,0.2)
+num=3
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
 tot=250
-data_set=mixtureofnormals(dist1,dist2,weights,tot,(tot,1))
-moment_set=mixtureofnormals(dist1,dist2,weights,10000,(10000,1))
-num=2
+m=1000
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
+moment_set=mixtureofnormals3(dist1,dist2,dist3,weights,m,(m,1))
+#Dist4
+
+# weights=(0.5,0.5)
+# dist1=(1.,0.2)
+# dist2=(2,0.2)
+# tot=250
+# data_set=mixtureofnormals(dist1,dist2,weights,tot,(tot,1))
+# moment_set=mixtureofnormals(dist1,dist2,weights,10000,(10000,1))
+# num=2
 
 z=10
 gen=Generator_Lz2(z_dim=z)
 
 #WGAN_final_22-01-2023-12-16-38.pt
-gen.load_state_dict(torch.load(f='../checkpoints/WGAN_final_20-02-2023-19-58-10.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/WGAN_20-02-2023-19-58-10.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/WGAN_final_23-02-2023-22-08-58.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/WGAN_23-02-2023-22-08-58.pt')
 
 #Testing
-noise_dist = "gaussian"
-noise_param = (0., 1.)
-# noise_dist = "uniform"
-# noise_param = (-1, 1)
-
-
+# noise_dist = "gaussian"
+# noise_param = (0., 1.)
+noise_dist = "uniform"
+noise_param = (-1, 1)
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -132,20 +129,20 @@ plt.show()
 plt.clf()
 
 #KS Stats Testing
-ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
+ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided',mode='asymp')
 if ks_test.pvalue <0.05:
-    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
+    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test)
 else:
-    print("Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test.pvalue)
+    print("Null Hypothesis accepted: From same distributionFrom same distribution. P-value: ", ks_test)
 
 # #CVM Stats Testing
 cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='asymptotic')
 if cvm_test.pvalue < 0.05:
     print(
         "CVM p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
-        cvm_test.pvalue)
+        cvm_test)
 else:
-    print("CVM: Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
+    print("CVM: Null Hypothesis accepted: From same distribution. P-value: ", cvm_test)
 
 print("Wasserstein Distance: ", stats.wasserstein_distance(x,transformed_noise))
 print("Real Data: ",stats.describe(x))

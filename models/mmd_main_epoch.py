@@ -9,7 +9,7 @@ import seaborn as sns
 import pandas as pd
 
 from vanilla_gam import GNet, Encoder, Decoder,Generator2, Generator_z2
-from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist,mixtureofnormals3
+from utils import data_sampler2, data_sampler, save_models, gen_kde,save_hist,mixtureofnormals3,mixtureofnormals
 
 # hyper parameters
 num_epochs = 10000
@@ -18,11 +18,14 @@ num_enc_dec = 5
 lr = 1e-3 # lr = (1e-2, 1e-3, 1e-4)
 z=20
 samp=128*2
+
 batch_size = (samp,z)
+noise_size=(samp,z)
+b = (num_enc_dec,samp)
 
 # Dist1
-target_dist = "gaussian"
-target_param = (23., 1.)
+# target_dist = "gaussian"
+# target_param = (23., 1.)
 # noise_dist = "gaussian"
 # noise_param = (0., 1.)
 
@@ -33,12 +36,20 @@ noise_dist = "uniform"
 noise_param = (-1, 1)
 
 #Dist 3
-# weights=(0.07,0.05,0.88)
-# dist1=(0.0282,0.0099)
-# dist2=(-0.0315,0.01356)
-# dist3=(-0.0001,0.0092)
-# tot=num_disc*samps
-# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
+tot=num_enc_dec*samp
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,b)
+
+#Dist4
+# weights=(0.5,0.5)
+# dist1=(1.,0.2)
+# dist2=(2.,0.2)
+# tot=num_enc_dec*samp
+# b = (num_enc_dec,samp)
+# data_set=mixtureofnormals(dist1,dist2,weights,tot,b)
 
 lambda_AE = 8. #as in paper
 
@@ -60,8 +71,8 @@ enc_optimizer = optim.Adam(enc.parameters(), lr=lr)
 dec_optimizer = optim.Adam(dec.parameters(), lr=lr)
 
 
-b = (num_enc_dec,samp)
-data_set= data_sampler2(target_dist, target_param, b)
+# b = (num_enc_dec,samp)
+# data_set= data_sampler2(target_dist, target_param, b)
 
 cum_dis_loss = 0
 cum_gen_loss = 0
@@ -126,12 +137,15 @@ for iteration in range(num_epochs):
         plt.show()
 print("Done")
 
+save_hist(data_set, "MMD") #Save data set for hist VaR Model.
+save_models(gen,enc,"final","MMD")
+
 noise = data_sampler2(noise_dist, noise_param, (10000,z))
 transformed_noise = gen.forward(noise)
 transformed_noise = transformed_noise.data.numpy()
 
-target = data_sampler(target_dist, target_param, 10000)
-# target=mixtureofnormals(dist1,dist2,weights,tot,b)
+# target = data_sampler(target_dist, target_param, 10000)
+target=mixtureofnormals(dist1,dist2,weights,tot,b)
 # data_set=mixtureofnormals3(dist1,dist2,dist3, weights,10000,(10000,1))
 target=target.data.numpy()
 

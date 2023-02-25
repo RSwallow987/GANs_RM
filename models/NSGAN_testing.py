@@ -9,30 +9,29 @@ import seaborn as sns
 from scipy import stats
 
 # data_set = data_sampler2("gaussian", (0.,0.02), (252,1))
-data_set = data_sampler2("gaussian", (23,1), (252,1))
-moment_set=data_sampler2("gaussian", (23,1), (10000,1))
+# data_set = data_sampler2("gaussian", (23,1), (252,1))
+# moment_set=data_sampler2("gaussian", (23,1), (10000,1))
 
-# num=3
-# # data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
-# weights=(0.07,0.05,0.88)
-# dist1=(0.0282,0.0099)
-# dist2=(-0.0315,0.01356)
-# dist3=(-0.0001,0.0092)
-# tot=250
-# data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
-
+num=3
+# data_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),252,(252,1))
+# moment_set=mixtureofnormals((1,0.2),(2,0.2),(0.5,0.5),10000,(10000,1))
+weights=(0.07,0.05,0.88)
+dist1=(0.0282,0.0099)
+dist2=(-0.0315,0.01356)
+dist3=(-0.0001,0.0092)
+tot=250
+data_set=mixtureofnormals3(dist1,dist2,dist3,weights,tot,(tot,1))
+moment_set= mixtureofnormals3(dist1,dist2,dist3,weights,1000,(1000,1))
 z=20
 gen = Generator_Lz2(z_dim=z)
-gen.load_state_dict(torch.load(f='../checkpoints/NS_23_9400_19-02-2023-14-26-40.pt', map_location='cpu'))
-x=torch.load(f='../data quantiles/NS_23_19-02-2023-14-27-00.pt')
+gen.load_state_dict(torch.load(f='../checkpoints/NS_23_final_23-02-2023-21-50-24.pt', map_location='cpu'))
+x=torch.load(f='../data quantiles/NS_23_23-02-2023-21-50-24.pt')
 
 #Testing
 # noise_dist = "gaussian"
 # noise_param = (0., 1.)
 noise_dist = "uniform"
 noise_param = (-1, 1)
-
-target_param = (23.,1.)
 
 noise = data_sampler2(noise_dist, noise_param, (100000,z))
 transformed_noise = gen.forward(noise)
@@ -120,18 +119,18 @@ plt.clf()
 #KS Stats Testing
 ks_test=stats.ks_2samp(x, transformed_noise,alternative='two-sided')
 if ks_test.pvalue <0.05:
-    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test.pvalue)
+    print("p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ", ks_test)
 else:
-    print("KS Null Hypothesis accepted: From same distribution. P-value: ", ks_test.pvalue)
+    print("KS Null Hypothesis accepted: From same distribution. P-value: ", ks_test)
 
 #CVM Stats Testing
 cvm_test = stats.cramervonmises_2samp(x, transformed_noise, method='asymptotic')
 if cvm_test.pvalue < 0.05:
     print(
         "p-value is lower than our threshold of 0.05, so we reject the null hypothesis in favor of the default “two-sided” alternative: the data were not drawn from the same distribution. P-value: ",
-        cvm_test.pvalue)
+        cvm_test)
 else:
-    print("CVM Null Hypothesis accepted: From same distribution. P-value: ", cvm_test.pvalue)
+    print("CVM Null Hypothesis accepted: From same distribution. P-value: ", cvm_test)
 
 print("Wasserstein Distance: ", stats.wasserstein_distance(x, transformed_noise))
 print("Real Data: ",stats.describe(x))
@@ -141,7 +140,7 @@ x1,x2=gen_kde(transformed_noise.reshape(-1))
 plt.clf()
 
 real_moments=stats.describe(x)
-real_moments2=stats.describe(data_sampler2("gaussian", (23.,1.), (10000,1)).detach().numpy())
+real_moments2=stats.describe(moment_set.detach().numpy())
 generated_moments=stats.describe(transformed_noise)
 mu=[]
 var=[]
